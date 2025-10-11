@@ -29,12 +29,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'pixabay.com',
-        port: '',
-        pathname: '/**',
-      }
     ],
   },
   env: {

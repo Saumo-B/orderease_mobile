@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -158,7 +159,7 @@ export function KitchenHeader() {
      if (pathname === '/kitchen/profile') {
       return {
         icon: <User className="h-5 w-5" />,
-        title: 'User Profile',
+        title: 'Profile',
       };
     }
     if (pathname === '/kitchen/roles') {

@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Mail, Building, Briefcase } from 'lucide-react';
+import { Mail, Briefcase, Building } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,11 +16,11 @@ interface UserProfile {
 }
 
 const ProfileInfoRow = ({ icon: Icon, label, value, valueClassName }: { icon: React.ElementType, label: string, value: string, valueClassName?: string }) => (
-  <div className="flex items-start gap-4">
-    <Icon className="h-5 w-5 text-cyan-400 mt-1" />
+  <div className="flex items-center gap-4">
+    <Icon className="h-5 w-5 text-cyan-400" />
     <div className="flex-grow">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className={`text-lg font-medium ${valueClassName}`}>{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={`text-base font-medium ${valueClassName}`}>{value}</p>
     </div>
   </div>
 );
@@ -47,19 +47,20 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <Card className="w-full max-w-2xl mx-auto bg-card/70 border-white/10 shadow-lg">
-        <CardHeader className="text-center">
-            <Skeleton className="h-24 w-24 rounded-full mx-auto" />
-            <Skeleton className="h-8 w-48 mt-4 mx-auto" />
-            <Skeleton className="h-4 w-64 mt-2 mx-auto" />
-        </CardHeader>
-        <CardContent className="space-y-6 p-8">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-        </CardContent>
-      </Card>
+      <div className="p-4 md:p-8">
+        <Card className="w-full mx-auto bg-card/70 border-white/10 shadow-lg">
+          <CardHeader className="text-center">
+              <Skeleton className="h-20 w-20 rounded-full mx-auto" />
+              <Skeleton className="h-7 w-40 mt-4 mx-auto" />
+              <Skeleton className="h-4 w-24 mt-2 mx-auto" />
+          </CardHeader>
+          <CardContent className="space-y-4 p-4 md:p-6">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
@@ -72,18 +73,17 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex justify-center items-start py-8">
-      <Card className="w-full max-w-2xl mx-auto bg-card/70 border-white/10 shadow-lg">
-        <CardHeader className="text-center items-center">
+    <div className="p-0 md:p-8">
+      <Card className="w-full mx-auto bg-card/70 border-white/10 shadow-lg">
+        <CardHeader className="text-center items-center p-6 md:p-6">
           <Avatar className="h-24 w-24 mb-4 border-4 border-cyan-400/50">
             <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${profile.name}`} alt={profile.name} />
             <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
           </Avatar>
           <CardTitle className="text-3xl font-bold text-white">{profile.name}</CardTitle>
-          <CardDescription className="text-cyan-400 capitalize">{profile.role}</CardDescription>
         </CardHeader>
-        <Separator className="my-4 bg-white/10" />
-        <CardContent className="space-y-6 p-8">
+        <Separator className="bg-white/10" />
+        <CardContent className="space-y-6 p-6 md:p-6">
             <ProfileInfoRow icon={Mail} label="Email" value={profile.email} />
             <ProfileInfoRow icon={Briefcase} label="Role" value={profile.role} valueClassName="capitalize" />
             <ProfileInfoRow icon={Building} label="Branch" value={profile.branchName} />

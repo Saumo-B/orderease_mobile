@@ -2,25 +2,17 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { CartItem, MenuItem, Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput } from '@/lib/types';
+import type { Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput } from '@/lib/types';
 import { axiosInstance } from '@/lib/axios-instance';
 import { usePathname } from 'next/navigation';
-import { getBranchId, getCustomerBranchId } from '@/lib/utils';
+import { getBranchId } from '@/lib/utils';
 
 interface OrderContextType {
-  cart: CartItem[];
-  myOrders: Order[];
   kitchenOrders: Order[];
   loading: boolean; // For kitchen orders
-  myOrdersLoading: boolean; // For my orders
   error: string | null;
-  fetchMyOrders: (phone: string) => Promise<void>;
   fetchKitchenOrders: () => Promise<void>;
   setKitchenOrders: React.Dispatch<React.SetStateAction<Order[]>>;
-  addToCart: (item: MenuItem) => void;
-  removeFromCart: (itemId: string) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
-  clearCart: () => void;
   markAsPaid: (id: string) => Promise<boolean>;
   completeOrder: (id: string) => Promise<boolean>;
   cancelOrder: (id: string) => Promise<boolean>;
@@ -31,9 +23,6 @@ interface OrderContextType {
   addStaffMember: (staffData: AddStaffInput) => Promise<boolean>;
   addBranch: (branchData: AddBranchInput) => Promise<boolean>;
   updateBranch: (branchId: string, branchData: UpdateBranchInput) => Promise<boolean>;
-  cartTotal: number;
-  cartCount: number;
-  inProgressOrderCount: number;
   isAddMenuItemDialogOpen: boolean;
   setIsAddMenuItemDialogOpen: (isOpen: boolean) => void;
   isAddIngredientDialogOpen: boolean;
@@ -45,8 +34,6 @@ interface OrderContextType {
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
-
-const CUSTOMER_PHONE_KEY = 'customerPhoneNumber';
 
 // Helper function to map backend order structure to frontend Order type
 const mapBackendOrderToFrontend = (order: any): Order => {
@@ -82,12 +69,9 @@ const mapBackendOrderToFrontend = (order: any): Order => {
 
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [myOrders, setMyOrders] = useState<Order[]>([]);
   const [kitchenOrders, setKitchenOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [myOrdersLoading, setMyOrdersLoading] = useState(false);
   const [isAddMenuItemDialogOpen, setIsAddMenuItemDialogOpen] = useState(false);
   const [isAddIngredientDialogOpen, setIsAddIngredientDialogOpen] = useState(false);
   const [isAddStaffDialogOpen, setIsAddStaffDialogOpen] = useState(false);
@@ -123,87 +107,18 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
   
-  const fetchMyOrders = useCallback(async (phone: string) => {
-    if (!phone || phone.length !== 10) return;
-    setMyOrdersLoading(true);
-
-    const branchId = getCustomerBranchId();
-    if (!branchId) {
-        console.warn("No customer branch ID found, cannot fetch my orders.");
-        setMyOrdersLoading(false);
-        return;
-    }
-
-    try {
-      const res = await axiosInstance.get(
-        `/api/myorder?phone=${phone}&branch=${branchId}`
-      );
-      const backendOrders = res.data.orders || [];
-      const fetchedOrders: Order[] = backendOrders.map(mapBackendOrderToFrontend);
-      setMyOrders(fetchedOrders.sort((a, b) => b.timestamp - a.timestamp));
-    } catch (err) {
-      console.error('Error fetching my orders:', err);
-      // We don't set a general error here not to disrupt other parts of the UI
-    } finally {
-      setMyOrdersLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
     const isKitchenPage = pathname.startsWith('/kitchen');
     const isAuthPage = pathname === '/kitchen/login' || pathname === '/kitchen/register';
-    const isLandingPage = pathname === '/';
     const kitchenPagesThatNeedOrders = ['/kitchen', '/kitchen/dashboard'];
 
 
     if (isKitchenPage && !isAuthPage && kitchenPagesThatNeedOrders.includes(pathname)) {
       fetchKitchenOrders();
-    } else if (!isLandingPage && !isKitchenPage) {
-      // This block will run for customer-facing pages like /menu, /my-cart, /my-orders
-      const cachedPhone = localStorage.getItem(CUSTOMER_PHONE_KEY);
-      if (cachedPhone) {
-        fetchMyOrders(cachedPhone);
-      }
-      setLoading(false);
     } else {
       setLoading(false);
     }
-  }, [fetchKitchenOrders, fetchMyOrders, pathname]);
-
-
-  const addToCart = (item: MenuItem) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((cartItem) => cartItem.id === item.id);
-      if (existingItem) {
-        return prevCart.map((cartItem) =>
-          cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem
-        );
-      }
-      return [...prevCart, { ...item, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== itemId));
-  };
-
-  const updateQuantity = (itemId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(itemId);
-    } else {
-      setCart((prevCart) =>
-        prevCart.map((item) => (item.id === itemId ? { ...item, quantity } : item))
-      );
-    }
-  };
-  
-  const clearCart = () => {
-    setCart([]);
-  };
-
-  const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
-  const inProgressOrderCount = myOrders.filter(order => order.status !== 'done' && order.status !== 'served').length;
+  }, [fetchKitchenOrders, pathname]);
 
  const completeOrder = async (id: string): Promise<boolean> => {
     try {
@@ -220,7 +135,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
                       .sort((a, b) => b.timestamp - a.timestamp);
 
         setKitchenOrders(updateState);
-        setMyOrders(updateState);
         
         return true;
       } else {
@@ -247,7 +161,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
                       .sort((a,b) => b.timestamp - a.timestamp);
 
         setKitchenOrders(updateState);
-        setMyOrders(updateState);
         
         return true;
       } else {
@@ -310,7 +223,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
           prevOrders.filter((order) => order.id !== orderId);
 
         setKitchenOrders(filterOutOrder);
-        setMyOrders(filterOutOrder);
         
         return true;
       } else {
@@ -406,19 +318,11 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   return (
     <OrderContext.Provider
       value={{
-        cart,
-        myOrders,
         kitchenOrders,
         loading,
-        myOrdersLoading,
         error,
         setKitchenOrders,
-        fetchMyOrders,
         fetchKitchenOrders,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
         completeOrder,
         markAsPaid,
         cancelOrder,
@@ -429,9 +333,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         addStaffMember,
         addBranch,
         updateBranch,
-        cartTotal,
-        cartCount,
-        inProgressOrderCount,
         isAddMenuItemDialogOpen,
         setIsAddMenuItemDialogOpen,
         isAddIngredientDialogOpen,
