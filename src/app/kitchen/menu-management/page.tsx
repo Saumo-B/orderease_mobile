@@ -112,9 +112,13 @@ export default function MenuManagementPage() {
         const sortedMenuItems = formattedMenuItems.sort((a, b) => a.name.localeCompare(b.name));
         
         setMenuItems(sortedMenuItems);
-        const uniqueCategories = Array.from(new Set(sortedMenuItems.map(item => item.category)));
-        uniqueCategories.sort();
-        setCategories(['All', ...uniqueCategories]);
+        if (sortedMenuItems.length > 0) {
+          const uniqueCategories = Array.from(new Set(sortedMenuItems.map(item => item.category)));
+          uniqueCategories.sort();
+          setCategories(['All', ...uniqueCategories]);
+        } else {
+          setCategories(['All']);
+        }
       } else {
         throw new Error('Invalid data format from API');
       }
@@ -161,9 +165,9 @@ export default function MenuManagementPage() {
         className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
         onClick={() => setIsAddMenuItemDialogOpen(true)}
       >
-        <CardContent className="flex flex-col items-center justify-center text-center p-4">
-          <Plus className="h-8 w-8 text-white transition-colors" />
-          <p className="mt-2 text-sm font-semibold text-white transition-colors">
+        <CardContent className="flex flex-row items-center justify-center p-4">
+          <Plus className="h-6 w-6 text-white transition-colors" />
+          <p className="ml-2 text-sm font-semibold text-white transition-colors">
             Add Item
           </p>
         </CardContent>
@@ -184,47 +188,45 @@ export default function MenuManagementPage() {
         </div>
       ) : (
         <div>
-          {menuItems.length > 0 ? (
-            <>
-              <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6">
-                <TabsList>
-                  {categories.map(category => (
-                    <TabsTrigger key={category} value={category}>
-                      {category}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
+          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6">
+            <TabsList>
+              {categories.map(category => (
+                <TabsTrigger key={category} value={category}>
+                  {category}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
 
-              <div className="grid grid-cols-2 gap-4">
-                  {addMenuItemCard}
-                  {filteredMenuItems.map((item) => (
-                       <Card 
-                            key={item.id} 
-                            className="group bg-card/70 border-white/10 shadow-lg flex flex-col overflow-hidden cursor-pointer duration-300"
-                            onClick={() => handleEditClick(item)}
-                        >
-                          <div className="aspect-video relative">
-                              <MenuItemImage
-                                  src={item.imageUrl}
-                                  alt={item.name}
-                              />
-                          </div>
-                          <CardHeader className="p-3 pb-1 flex-grow">
-                              <CardTitle className="text-base text-white truncate transition-colors">{item.name}</CardTitle>
-                              <CardDescription className="text-xs text-muted-foreground mt-1 h-4 overflow-hidden line-clamp-1">{item.description}</CardDescription>
-                              <p className="text-xs text-muted-foreground">{item.category}</p>
-                          </CardHeader>
-                          <CardContent className="p-3 pt-0 mt-auto">
-                              <p className="text-lg font-bold text-green-400">INR {item.price}</p>
-                          </CardContent>
-                      </Card>
-                  ))}
-              </div>
-            </>
-          ) : (
-            <div>
+          {menuItems.length > 0 ? (
+            <div className="grid grid-cols-2 gap-4">
                 {addMenuItemCard}
+                {filteredMenuItems.map((item) => (
+                     <Card 
+                          key={item.id} 
+                          className="group bg-card/70 border-white/10 shadow-lg flex flex-col overflow-hidden cursor-pointer duration-300"
+                          onClick={() => handleEditClick(item)}
+                      >
+                        <div className="aspect-video relative">
+                            <MenuItemImage
+                                src={item.imageUrl}
+                                alt={item.name}
+                            />
+                        </div>
+                        <CardHeader className="p-3 pb-1 flex-grow">
+                            <CardTitle className="text-base text-white truncate transition-colors">{item.name}</CardTitle>
+                            <CardDescription className="text-xs text-muted-foreground mt-1 h-4 overflow-hidden line-clamp-1">{item.description}</CardDescription>
+                            <p className="text-xs text-muted-foreground">{item.category}</p>
+                        </CardHeader>
+                        <CardContent className="p-3 pt-0 mt-auto">
+                            <p className="text-lg font-bold text-green-400">INR {item.price}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {addMenuItemCard}
             </div>
           )}
         </div>

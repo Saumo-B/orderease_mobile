@@ -79,19 +79,21 @@ export default function InventoryPage() {
     setIsEditDialogOpen(true);
   };
 
-  const addIngredientButton = (
+  const addIngredientCard = (
     <AddIngredientDialog
       isOpen={isAddIngredientDialogOpen}
       setIsOpen={setIsAddIngredientDialogOpen}
       onIngredientAdded={handleIngredientAdded}
     >
-        <Button 
-            className="w-full h-16 bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        <Card 
+            className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
             onClick={() => setIsAddIngredientDialogOpen(true)}
         >
-            <Plus className="h-8 w-8 text-white mr-2" />
-            <span className="text-base font-semibold text-white">Add Ingredient</span>
-        </Button>
+            <CardContent className="flex flex-row items-center justify-center text-center p-4">
+                <Plus className="h-6 w-6 text-white transition-colors" />
+                <p className="ml-2 text-sm font-semibold text-white transition-colors">Add Ingredient</p>
+            </CardContent>
+        </Card>
     </AddIngredientDialog>
   );
 
@@ -108,16 +110,16 @@ export default function InventoryPage() {
         </div>
         ) : (
         <div className="space-y-4">
-            {addIngredientButton}
             {inventory.length > 0 ? (
-                <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                    {addIngredientCard}
                     {inventory.map((item) => (
                         <Card 
                             key={item.id} 
                             className="group bg-card/70 border-white/10 shadow-lg duration-300 cursor-pointer"
                             onClick={() => handleEditClick(item)}
                         >
-                          <CardContent className="p-4 flex justify-between items-center">
+                          <CardContent className="p-4 flex flex-col items-start">
                             <p className="font-semibold text-lg text-white transition-colors">{item.name}</p>
                             <p className={cn("text-sm font-mono", item.lowStockWarning ? "text-destructive" : "text-green-400")}>
                                 {`${item.quantity} ${item.unit}`}
@@ -127,11 +129,9 @@ export default function InventoryPage() {
                     ))}
                 </div>
             ) : (
-                <div className="text-center text-muted-foreground py-16 flex flex-col items-center justify-center border-2 border-dashed border-white/20 rounded-lg">
-                    <PackageOpen className="h-12 w-12 mb-4" />
-                    <p>Your inventory is empty.</p>
-                    <p className="text-sm">Start by adding your first ingredient.</p>
-                </div>
+                 <div className="grid grid-cols-2 gap-4">
+                    {addIngredientCard}
+                 </div>
             )}
         </div>
         )}

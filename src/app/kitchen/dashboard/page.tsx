@@ -94,13 +94,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <StatCards data={data.kpis} />
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
            <SalesChart todayData={data.salesTodayByHour} yesterdayData={data.salesYesterdayByHour} />
         </div>
-        <div className="h-full flex flex-col gap-4">
+        <div className="h-full flex flex-col gap-6">
            <OrdersSnapshot />
            {showInventorySnapshot && <InventorySnapshot lowStockItems={data.lowStockItems} />}
         </div>

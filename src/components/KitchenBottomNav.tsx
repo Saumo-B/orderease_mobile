@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { ScrollArea, ScrollBar } from './ui/scroll-area';
+import { Skeleton } from './ui/skeleton';
 
 const mainNavItems = [
   { icon: Search, label: 'Orders', href: '/kitchen', id: 'orders' },
@@ -49,19 +50,17 @@ export function KitchenBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [visibleMainNavItems, setVisibleMainNavItems] = useState(mainNavItems);
+  const [visibleMainNavItems, setVisibleMainNavItems] = useState<typeof mainNavItems>([]);
   const [sheetMenuItems, setSheetMenuItems] = useState(baseSheetMenuItems);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     try {
       const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
-      if (storedFlags) {
-        const flags = JSON.parse(storedFlags);
-        const visibleItems = mainNavItems.filter(item => flags[item.id] !== false);
-        setVisibleMainNavItems(visibleItems);
-      } else {
-        setVisibleMainNavItems(mainNavItems);
-      }
+      const flags = storedFlags ? JSON.parse(storedFlags) : {};
+      const visibleItems = mainNavItems.filter(item => flags[item.id] !== false);
+      setVisibleMainNavItems(visibleItems);
       
       const userProfile = localStorage.getItem('userProfile');
       const role = userProfile ? JSON.parse(userProfile).role : '';
@@ -95,7 +94,6 @@ export function KitchenBottomNav() {
         if (sheetMenuItems.find(item => item.href === '#' && item.label === 'Logout')) {
             handleLogout();
         }
-        // For settings, do nothing for now.
     } else {
         router.push(href);
         setIsSheetOpen(false);
@@ -103,34 +101,50 @@ export function KitchenBottomNav() {
   }
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 bg-background/80 backdrop-blur-sm border-t border-white/10">
-      <ScrollArea className="h-full whitespace-nowrap no-scrollbar">
-        <div className="flex h-full items-center justify-center px-2">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 bg-background/80 backdrop-blur-sm border-t border-white/10 overflow-x-auto no-scrollbar">
+      <div className="flex h-full items-center justify-center px-2">
+        {!isClient ? (
+          <>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center justify-center h-16 px-1">
+                <Skeleton className="h-6 w-6 rounded-md" />
+                <Skeleton className="h-3 w-10 mt-1 rounded-md" />
+              </div>
+            ))}
+            <div className="flex-1 flex flex-col items-center justify-center h-16 px-1">
+                <Skeleton className="h-6 w-6 rounded-md" />
+                <Skeleton className="h-3 w-10 mt-1 rounded-md" />
+            </div>
+          </>
+        ) : (
+          <>
             {visibleMainNavItems.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                     <Button
-                    key={item.label}
-                    variant="ghost"
-                    asChild
-                    className={cn(
-                        'flex-1 flex items-center justify-center font-medium rounded-none',
-                        isActive ? 'text-cyan-400' : 'text-white/80'
-                    )}
+                      key={item.label}
+                      variant="ghost"
+                      asChild
+                      className={cn(
+                          'flex-1 flex flex-col items-center justify-center font-medium rounded-none h-full',
+                          isActive ? 'text-cyan-400' : 'text-white/80'
+                      )}
                     >
-                    <Link href={item.href}>
-                        <item.icon className="h-6 w-6" />
-                    </Link>
+                      <Link href={item.href} className="flex flex-col items-center justify-center">
+                          <item.icon className="h-6 w-6" />
+                          <span className="text-xs mt-0">{item.label}</span>
+                      </Link>
                     </Button>
                 );
             })}
              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                 <SheetTrigger asChild>
                     <Button
-                    variant="ghost"
-                    className="flex-1 flex items-center justify-center font-medium rounded-none text-white/80"
+                      variant="ghost"
+                      className="flex-1 flex flex-col items-center justify-center font-medium rounded-none text-white/80 h-full"
                     >
-                    <Plus className="h-6 w-6" />
+                      <Plus className="h-6 w-6" />
+                      <span className="text-xs mt-1">More</span>
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="bg-card w-full rounded-t-2xl border-white/10 flex flex-col p-0 max-h-[40vh]">
@@ -160,9 +174,9 @@ export function KitchenBottomNav() {
                     </div>
                 </SheetContent>
             </Sheet>
-        </div>
-        <ScrollBar orientation="horizontal" className="h-0" />
-      </ScrollArea>
+          </>
+        )}
+      </div>
     </div>
   );
 }

@@ -36,12 +36,12 @@ export default function KitchenPage() {
       onOrderCreated={handleOrderCreated}
     >
       <Card
-        className="h-[150px] flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        className="h-[150px] flex items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
         onClick={() => setIsCreateDialogOpen(true)}
       >
-        <CardContent className="flex flex-col items-center justify-center text-center p-6">
-          <Plus className="h-10 w-10 text-white transition-colors" />
-          <p className="mt-2 text-base font-semibold text-white transition-colors">
+        <CardContent className="flex flex-row items-center justify-center text-center p-6">
+          <Plus className="h-8 w-8 text-white transition-colors" />
+          <p className="ml-4 text-base font-semibold text-white transition-colors">
             Create Order
           </p>
         </CardContent>
@@ -103,7 +103,7 @@ export default function KitchenPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center bg-card rounded-lg mt-8 h-[200px] flex flex-col items-center justify-center">
+              <div className="text-center bg-card rounded-lg h-[100px] flex flex-col items-center justify-center">
                 <p className="text-muted-foreground">
                   No completed orders at the moment.
                 </p>
