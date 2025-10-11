@@ -1,0 +1,107 @@
+
+[
+  {
+    "id": "1",
+    "name": "Chicken Lolipop",
+    "description": "Spicy, crispy, and fun-to-eat chicken on the stick!",
+    "price": 130,
+    "image": "/images/chicken-lolipop.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": "2",
+    "name": "Chicken Popcorn",
+    "description": "Bite-sized crispy delights, perfect for snacking anytime!",
+    "price": 90,
+    "image": "/images/chicken-popcorn.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": "3",
+    "name": "Chicken Wings",
+    "description": "Juicy, flavorful wings coated in a rich, tangy spice kick.",
+    "price": 150,
+    "image": "/images/chicken-wings.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": "4",
+    "name": "Fried Chicken",
+    "description": "Golden, crunchy outside with tender, juicy chicken inside.",
+    "price": 110,
+    "image": "/images/fried-chicken.jpg",
+    "category": "Starters"
+  },
+  {
+    "id": "5",
+    "name": "Burger",
+    "description": "Juicy patty, fresh veggies, and sauces stacked to perfection.",
+    "price": 80,
+    "image": "/images/burger.jpg",
+    "category": "Heavy Snacks"
+  },
+  {
+    "id": "6",
+    "name": "Momo",
+    "description": "Steamed pockets of joy bursting with flavor.",
+    "price": 60,
+    "image": "/images/momos.jpg",
+    "category": "Heavy Snacks"
+  },
+  {
+    "id": "7",
+    "name": "Pizza",
+    "description": "Cheesy, crispy, and loaded with irresistible toppings.",
+    "price": 140,
+    "image": "/images/pizza.jpg",
+    "category": "Heavy Snacks"
+  },
+  {
+    "id": "8",
+    "name": "Roll",
+    "description": "Flavorful fillings wrapped in a warm, soft roll.",
+    "price": 60,
+    "image": "/images/roll.jpg",
+    "category": "Heavy Snacks"
+  },
+  {
+    "id": "9",
+    "name": "Sandwich",
+    "description": "Fresh, tasty layers packed between soft bread slices.",
+    "price": 80,
+    "image": "/images/sandwich.jpg",
+    "category": "Heavy Snacks"
+  },
+  {
+    "id": "10",
+    "name": "Fried Rice",
+    "description": "Fragrant rice stir-fried with veggies & seasonings.",
+    "price": 250,
+    "image": "/images/fried-rice.jpg",
+    "category": "Rice & Noodles"
+  },
+  {
+    "id": "11",
+    "name": "Noodles",
+    "description": "Long, slurpy strands tossed in flavorful spices.",
+    "price": 240,
+    "image": "/images/noodles.jpg",
+    "category": "Rice & Noodles"
+  },
+  {
+    "id": "12",
+    "name": "Chilli Chicken",
+    "description": "Crispy chicken tossed in spicy, tangy sauce.",
+    "price": 240,
+    "image": "/images/chilli-chicken.jpg",
+    "category": "Sides"
+  },
+  {
+    "id": "13",
+    "name": "Chilli Fish",
+    "description": "Golden fried fish coated in hot & zesty flavors.",
+    "price": 250,
+    "image": "/images/chilli-fish.jpg",
+    "category": "Sides"
+  }
+]
