@@ -29,6 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+replay*
 
 # vercel
 .vercel
@@ -43,3 +44,7 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+
+#mobile
+/android
+/ios
