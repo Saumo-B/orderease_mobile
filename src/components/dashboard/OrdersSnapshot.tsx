@@ -23,7 +23,7 @@ const statusConfig: Record<string, { text: string; className: string }> = {
 
 
 export function OrdersSnapshot() {
-  const { kitchenOrders, loading } = useOrder();
+  const { kitchenOrders } = useOrder();
 
   const pendingOrders = kitchenOrders
     .filter(
@@ -50,11 +50,7 @@ export function OrdersSnapshot() {
         </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center items-center h-full">
-            <Loader2 className="h-6 w-6 text-cyan-400 animate-spin" />
-          </div>
-        ) : pendingOrders.length > 0 ? (
+        {pendingOrders.length > 0 ? (
           <ScrollArea className="h-full no-scrollbar">
             <div className="space-y-3">
               {pendingOrders.map((order) => {

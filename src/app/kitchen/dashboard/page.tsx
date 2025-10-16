@@ -10,14 +10,16 @@ import { OrdersSnapshot } from '@/components/dashboard/OrdersSnapshot';
 import { InventorySnapshot } from '@/components/dashboard/InventorySnapshot';
 import { axiosInstance } from '@/lib/axios-instance';
 import { getBranchId } from '@/lib/utils';
+import { useOrder } from '@/context/OrderContext';
 
 const FEATURE_FLAGS_KEY = 'featureFlags';
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInventorySnapshot, setShowInventorySnapshot] = useState(true);
+  const { loading: ordersLoading } = useOrder();
 
   useEffect(() => {
     // Feature flag for inventory snapshot
@@ -59,17 +61,19 @@ export default function DashboardPage() {
           lowStockItems: apiData.lowStockItems,
         });
 
-        setLoading(false);
+        setStatsLoading(false);
       } catch (err: any) {
         console.error('Failed to fetch dashboard data:', err);
         setError(err.message || 'Could not load dashboard data. Please try again later.');
-        setLoading(false);
+        setStatsLoading(false);
       }
     }
     fetchData();
   }, []);
+  
+  const isLoading = statsLoading || ordersLoading;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
         <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />

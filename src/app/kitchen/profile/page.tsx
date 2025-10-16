@@ -47,13 +47,10 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-8">
-        <Card className="w-full mx-auto bg-card/70 border-white/10 shadow-lg">
-          <CardHeader className="text-center">
-              <Skeleton className="h-20 w-20 rounded-full mx-auto" />
-              <Skeleton className="h-7 w-40 mt-4 mx-auto" />
-              <Skeleton className="h-4 w-24 mt-2 mx-auto" />
-          </CardHeader>
+      <div className="p-4 md:p-8 flex flex-col items-center">
+        <Skeleton className="h-24 w-24 rounded-full" />
+        <Skeleton className="h-8 w-40 mt-4" />
+        <Card className="w-full mt-8 bg-card/70 border-white/10 shadow-lg">
           <CardContent className="space-y-4 p-4 md:p-6">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -74,15 +71,14 @@ export default function ProfilePage() {
 
   return (
     <div className="p-0 md:p-8">
-      <Card className="w-full mx-auto bg-card/70 border-white/10 shadow-lg">
-        <CardHeader className="text-center items-center p-6 md:p-6">
-          <Avatar className="h-24 w-24 mb-4 border-4 border-cyan-400/50">
-            <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${profile.name}`} alt={profile.name} />
+       <div className="flex flex-col items-center text-center mb-8">
+         <Avatar className="h-24 w-24 mb-4 border-4 border-cyan-400/50">
+            <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${profile.name}&backgroundColor=transparent&textColor=22d3ee`} alt={profile.name} />
             <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-          </Avatar>
-          <CardTitle className="text-3xl font-bold text-white">{profile.name}</CardTitle>
-        </CardHeader>
-        <Separator className="bg-white/10" />
+        </Avatar>
+        <h1 className="text-3xl font-bold text-white">{profile.name}</h1>
+       </div>
+      <Card className="w-full mx-auto bg-card/70 border-white/10 shadow-lg">
         <CardContent className="space-y-6 p-6 md:p-6">
             <ProfileInfoRow icon={Mail} label="Email" value={profile.email} />
             <ProfileInfoRow icon={Briefcase} label="Role" value={profile.role} valueClassName="capitalize" />
@@ -92,3 +88,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+

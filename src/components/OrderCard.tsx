@@ -73,6 +73,7 @@ export function OrderCard({ order }: OrderCardProps) {
 
   const phoneNumber10Digits = order.customerPhone.slice(-10);
   const isCompleted = order.status === 'done';
+  const isPaid = order.status === 'paid';
 
   const handleOrderUpdated = () => {
     // The context will automatically refetch, but we can trigger it manually if needed
@@ -191,7 +192,7 @@ export function OrderCard({ order }: OrderCardProps) {
   );
 
 
-  if (isCompleted) {
+  if (isCompleted || isPaid) {
     return CardComponent;
   }
 

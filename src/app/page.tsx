@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { axiosInstance } from '@/lib/axios-instance';
 
+const FEATURE_FLAGS_KEY = 'featureFlags';
+
 export default function LandingPage() {
   // Login State
   const [loginEmail, setLoginEmail] = useState('');
@@ -32,27 +34,45 @@ export default function LandingPage() {
     setLoginError(null);
 
     try {
-      const response = await axiosInstance.post(`/api/login`, {
+      const loginResponse = await axiosInstance.post(`/api/login`, {
         email: loginEmail,
         password: loginPassword,
       });
 
-      if (response.status === 200 && response.data.token) {
-        localStorage.setItem('authToken', response.data.token);
-        if (response.data.userResponse) {
+      if (loginResponse.status === 200 && loginResponse.data.token) {
+        localStorage.setItem('authToken', loginResponse.data.token);
+        if (loginResponse.data.userResponse) {
           // Set both the dynamic and static profiles on login
           localStorage.setItem(
             'userProfile',
-            JSON.stringify(response.data.userResponse)
+            JSON.stringify(loginResponse.data.userResponse)
           );
            localStorage.setItem(
             'staticUserProfile',
-            JSON.stringify(response.data.userResponse)
+            JSON.stringify(loginResponse.data.userResponse)
           );
         }
+
+        // Fetch access control / feature flags
+        try {
+            const accessResponse = await axiosInstance.get('/api/access/');
+            if(accessResponse.status === 200 && accessResponse.data.accessControl) {
+                localStorage.setItem(FEATURE_FLAGS_KEY, JSON.stringify(accessResponse.data.accessControl));
+            } else {
+                 console.warn("Could not fetch feature flags, using defaults.");
+                 // Set default flags if API fails, or clear them
+                 localStorage.removeItem(FEATURE_FLAGS_KEY);
+            }
+        } catch (accessErr) {
+            console.error('Failed to fetch access controls:', accessErr);
+            // Handle failure to fetch flags - maybe set defaults or clear them
+            localStorage.removeItem(FEATURE_FLAGS_KEY);
+        }
+
+
         router.push('/kitchen');
       } else {
-        setLoginError(response.data.message || 'Login failed. Please try again.');
+        setLoginError(loginResponse.data.message || 'Login failed. Please try again.');
       }
     } catch (err: any) {
       console.error('Login failed:', err);

@@ -6,6 +6,8 @@ export interface MenuItem {
   price: number;
   image: string;
   category: string;
+  outOfStock?: boolean;
+  manualOutOfStock?: boolean;
 }
 
 // This interface is used when adding items to the cart on the frontend.
@@ -78,6 +80,8 @@ export interface FullMenuItem {
   description: string;
   imageUrl: string;
   recipe: RecipeItem[];
+  outOfStock?: boolean;
+  manualOutOfStock?: boolean;
 }
 
 // Types for Roles / Staff Management

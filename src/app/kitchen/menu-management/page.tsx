@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
-import { Loader2, AlertTriangle, PackageOpen, Plus } from 'lucide-react';
+import { Loader2, AlertTriangle, PackageOpen, Plus, Ban } from 'lucide-react';
 import type { FullMenuItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useOrder } from '@/context/OrderContext';
 import { axiosInstance } from '@/lib/axios-instance';
 import { getBranchId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 // Helper function to check for a valid URL
 const isValidUrl = (url: string | undefined): boolean => {
@@ -27,7 +28,7 @@ const isValidUrl = (url: string | undefined): boolean => {
 
 
 // A component to handle image errors gracefully
-function MenuItemImage({ src, alt }: { src: string; alt: string }) {
+function MenuItemImage({ src, alt, outOfStock }: { src: string; alt: string, outOfStock?: boolean }) {
   const [imgSrc, setImgSrc] = useState(src);
   const [hasError, setHasError] = useState(!isValidUrl(src));
 
@@ -56,13 +57,21 @@ function MenuItemImage({ src, alt }: { src: string; alt: string }) {
   }
 
   return (
-    <Image
-      src={imgSrc}
-      alt={alt}
-      fill
-      className="object-cover"
-      onError={handleNextImageError}
-    />
+    <div className={cn("relative w-full h-full", outOfStock && "grayscale")}>
+        <Image
+          src={imgSrc}
+          alt={alt}
+          fill
+          className="object-cover"
+          onError={handleNextImageError}
+        />
+        {outOfStock && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                <Ban className="h-8 w-8 text-white" />
+                <span className="font-bold text-white mt-2 text-sm">OUT OF STOCK</span>
+            </div>
+        )}
+    </div>
   );
 }
 
@@ -105,6 +114,8 @@ export default function MenuManagementPage() {
                 description: item.description,
                 imageUrl: imageUrl,
                 recipe: item.recipe,
+                outOfStock: item.outOfStock || item.manualOutOfStock,
+                manualOutOfStock: item.manualOutOfStock,
             };
           }
         );
@@ -204,13 +215,17 @@ export default function MenuManagementPage() {
                 {filteredMenuItems.map((item) => (
                      <Card 
                           key={item.id} 
-                          className="group bg-card/70 border-white/10 shadow-lg flex flex-col overflow-hidden cursor-pointer duration-300"
+                          className={cn(
+                            "group bg-card/70 border-white/10 shadow-lg flex flex-col overflow-hidden duration-300",
+                            "cursor-pointer"
+                          )}
                           onClick={() => handleEditClick(item)}
                       >
                         <div className="aspect-video relative">
                             <MenuItemImage
                                 src={item.imageUrl}
                                 alt={item.name}
+                                outOfStock={item.outOfStock}
                             />
                         </div>
                         <CardHeader className="p-3 pb-1 flex-grow">

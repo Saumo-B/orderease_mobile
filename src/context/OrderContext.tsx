@@ -84,11 +84,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       setError(null);
       const branchId = getBranchId();
-      if (!branchId) {
-        // We can choose to throw an error, or just not fetch.
-        // For now, we will not fetch, and the UI will show no orders.
+      if (!branchId || branchId === '68d6fda5bab89f8afc545cee') { // Do not fetch for "All" branch ID
         setKitchenOrders([]);
-        console.warn("No branch ID found, cannot fetch kitchen orders.");
+        setLoading(false);
         return;
       }
       const res = await axiosInstance.get(

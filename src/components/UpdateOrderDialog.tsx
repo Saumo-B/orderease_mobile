@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Loader2, Plus, Trash2, Minus, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Trash2, Minus, AlertTriangle, Ban } from 'lucide-react';
 import type { MenuItem, Order, OrderItem } from '@/lib/types';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useOrder } from '@/context/OrderContext';
@@ -42,6 +42,7 @@ interface CurrentOrderItem extends OrderItem {
   // Corresponds to MenuItem id
   menuItemId: string;
   initialQty: number; // to track the original quantity
+  outOfStock?: boolean;
 }
 
 export function UpdateOrderDialog({
@@ -68,7 +69,8 @@ export function UpdateOrderDialog({
         return {
           ...item,
           menuItemId: menuItem ? menuItem.id : 'unknown-item',
-          initialQty: item.quantity
+          initialQty: item.quantity,
+          outOfStock: menuItem?.outOfStock || menuItem?.manualOutOfStock
         };
       }).filter(item => item.menuItemId !== 'unknown-item');
       
@@ -95,6 +97,8 @@ export function UpdateOrderDialog({
               price: item.price,
               image: item.imageUrl,
               category: item.category,
+              outOfStock: item.outOfStock || item.manualOutOfStock,
+              manualOutOfStock: item.manualOutOfStock,
             }));
             
             const uniqueCategories = Array.from(new Set(formattedMenuItems.map(item => item.category)));
@@ -128,6 +132,11 @@ export function UpdateOrderDialog({
   }, [order, menuItems, initializeItems]);
 
   const updateItemQuantity = (itemToUpdate: MenuItem, newQuantity: number) => {
+    if(itemToUpdate.outOfStock && newQuantity > 0) {
+      const existingItem = currentItems.find(item => item.menuItemId === itemToUpdate.id);
+      if (!existingItem) return;
+    }
+
     setCurrentItems(prevItems => {
         const existingItemIndex = prevItems.findIndex(item => item.menuItemId === itemToUpdate.id);
         
@@ -160,6 +169,7 @@ export function UpdateOrderDialog({
                     initialQty: 0,
                     active: newQuantity,
                     servedQty: 0,
+                    outOfStock: itemToUpdate.outOfStock,
                 };
                 return [...prevItems, newItem];
             }
@@ -247,18 +257,18 @@ export function UpdateOrderDialog({
         <DialogHeader>
           <DialogTitle className="text-cyan-400">Update Order #{order.token}</DialogTitle>
         </DialogHeader>
+        {loadingMenu ? (
+            <div className="flex justify-center items-center flex-grow">
+                <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+            </div>
+        ) : menuError ? (
+            <div className="flex flex-col justify-center items-center flex-grow text-destructive">
+                <AlertTriangle className="h-8 w-8 mb-2" />
+                <p>{menuError}</p>
+            </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8 p-4 flex-grow h-full overflow-y-auto no-scrollbar">
             <div className="md:col-span-3 space-y-6 flex flex-col">
-             {loadingMenu ? (
-                <div className="flex justify-center items-center h-full">
-                    <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-                </div>
-             ) : menuError ? (
-                <div className="flex flex-col justify-center items-center h-full text-destructive">
-                    <AlertTriangle className="h-8 w-8 mb-2" />
-                    <p>{menuError}</p>
-                </div>
-             ) : (
                  <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full flex-grow flex flex-col overflow-hidden">
                     <TabsList className="w-full justify-start overflow-x-auto bg-transparent p-0 pb-2 flex-nowrap no-scrollbar">
                         {categories.map((cat) => (
@@ -279,9 +289,10 @@ export function UpdateOrderDialog({
                             const isDecrementDisabled = quantity <= servedQty;
 
                             return (
-                            <div key={item.id} className="flex items-center justify-between p-2 rounded-md bg-background/50">
+                            <div key={item.id} className={cn("flex items-center justify-between p-2 rounded-md bg-background/50", item.outOfStock && !currentItem && "opacity-50")}>
                                 <div className="flex flex-col">
                                     <span>{item.name}</span>
+                                    {item.outOfStock && <span className="text-xs text-destructive">Out of stock</span>}
                                 </div>
                                 <div className="flex items-center gap-4">
                                     <div className="font-mono text-sm text-green-400 flex justify-between w-20">
@@ -290,8 +301,8 @@ export function UpdateOrderDialog({
                                     </div>
                                     <div className="flex items-center justify-end w-[90px] h-8">
                                         {quantity === 0 ? (
-                                            <Button size="sm" className="bg-cyan-500/20 text-cyan-300 w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)}>
-                                              <Plus className="h-4 w-4 mr-1" /> Add
+                                            <Button size="sm" className="bg-cyan-500/20 text-cyan-300 w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)} disabled={item.outOfStock}>
+                                                {item.outOfStock ? <Ban className="h-4 w-4" /> : <><Plus className="h-4 w-4 mr-1" /> Add</>}
                                             </Button>
                                         ) : (
                                             <div className="flex items-center gap-2">
@@ -312,7 +323,6 @@ export function UpdateOrderDialog({
                         </ScrollArea>
                     </TabsContent>
                 </Tabs>
-             )}
             </div>
 
             <div className="md:col-span-2 bg-background p-6 rounded-lg flex flex-col">
@@ -382,7 +392,7 @@ export function UpdateOrderDialog({
                                 Cancel Order
                             </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="p-4">
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                             <AlertDialogDescription>
@@ -417,7 +427,13 @@ export function UpdateOrderDialog({
                 </div>
             </div>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
+
+    
+
+    
