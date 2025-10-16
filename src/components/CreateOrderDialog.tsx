@@ -11,13 +11,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Plus, Trash2, Minus, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Trash2, Minus, AlertTriangle, Ban } from 'lucide-react';
 import type { MenuItem } from '@/lib/types';
 import { useState, useMemo, useEffect } from 'react';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { axiosInstance } from '@/lib/axios-instance';
 import { getBranchId } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface CreateOrderDialogProps {
   children: React.ReactNode;
@@ -66,6 +67,8 @@ export function CreateOrderDialog({
               price: item.price,
               image: item.imageUrl,
               category: item.category,
+              outOfStock: item.outOfStock || item.manualOutOfStock,
+              manualOutOfStock: item.manualOutOfStock,
             }));
             const uniqueCategories = Array.from(new Set(formattedMenuItems.map(item => item.category)));
             uniqueCategories.sort();
@@ -104,6 +107,8 @@ export function CreateOrderDialog({
   }, [isOpen]);
 
   const updateItemQuantity = (itemToUpdate: MenuItem, newQuantity: number) => {
+    if(itemToUpdate.outOfStock && newQuantity > 0) return;
+
     setOrderItems(prevItems => {
         if (newQuantity <= 0) {
             return prevItems.filter(item => item.id !== itemToUpdate.id);
@@ -214,150 +219,153 @@ export function CreateOrderDialog({
         <DialogHeader>
           <DialogTitle className="text-cyan-400">Create Order</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 p-4 flex-grow h-full overflow-y-auto no-scrollbar">
-          {/* Left Column */}
-          <div className="md:col-span-3 space-y-6 flex flex-col">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                id="name"
-                value={customerName}
-                onChange={handleNameChange}
-                placeholder="Customer Name"
-                className="bg-background"
-              />
-              <Input
-                id="phone"
-                value={customerPhone}
-                onChange={handlePhoneChange}
-                placeholder="Customer Phone"
-                type="tel"
-                className="bg-background"
-              />
-            </div>
-
-            <div className="flex-grow flex flex-col overflow-hidden">
-             {loadingMenu ? (
-                <div className="flex justify-center items-center h-full">
-                    <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-                </div>
-             ) : menuError ? (
-                <div className="flex flex-col justify-center items-center h-full text-destructive">
-                    <AlertTriangle className="h-8 w-8 mb-2" />
-                    <p>{menuError}</p>
-                </div>
-             ) : (
-              <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full flex-grow flex flex-col overflow-hidden">
-                <TabsList className="w-full justify-start overflow-x-auto bg-transparent p-0 pb-2 flex-nowrap no-scrollbar">
-                  {categories.map((cat) => (
-                    <TabsTrigger key={cat} value={cat} className="flex-shrink-0">
-                      {cat}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <TabsContent value={activeCategory} className="mt-0 flex-grow overflow-hidden">
-                  <ScrollArea className="h-full no-scrollbar">
-                    <div className="space-y-2">
-                      {filteredMenuItems.map((item: MenuItem) => {
-                        const currentItem = orderItems.find(oi => oi.id === item.id);
-                        const quantity = currentItem?.quantity || 0;
-                        return (
-                        <div key={item.id} className="flex items-center justify-between p-2 rounded-md bg-background/50">
-                            <div className="flex flex-col">
-                            <span>{item.name}</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                            <div className="font-mono text-sm text-green-400 flex justify-between w-20">
-                                <span>INR</span>
-                                <span>{item.price}</span>
-                            </div>
-                            <div className="flex items-center justify-end w-[90px] h-8">
-                                {quantity === 0 ? (
-                                    <Button size="sm" className="bg-cyan-500/20 text-cyan-300 w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)}>
-                                        <Plus className="h-4 w-4 mr-1" /> Add
-                                    </Button>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity - 1)}>
-                                            <Minus className="h-4 w-4" />
-                                        </Button>
-                                        <span className="font-bold text-center w-4">{quantity}</span>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity + 1)}>
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                            </div>
-                        </div>
-                      )})}
-                    </div>
-                  </ScrollArea>
-                </TabsContent>
-              </Tabs>
-             )}
-            </div>
+        {loadingMenu ? (
+          <div className="flex justify-center items-center flex-grow">
+            <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
           </div>
+        ) : menuError ? (
+          <div className="flex flex-col justify-center items-center flex-grow text-destructive">
+            <AlertTriangle className="h-8 w-8 mb-2" />
+            <p>{menuError}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 p-4 flex-grow h-full overflow-y-auto no-scrollbar">
+            {/* Left Column */}
+            <div className="md:col-span-3 space-y-6 flex flex-col">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  id="name"
+                  value={customerName}
+                  onChange={handleNameChange}
+                  placeholder="Customer Name"
+                  className="bg-background"
+                />
+                <Input
+                  id="phone"
+                  value={customerPhone}
+                  onChange={handlePhoneChange}
+                  placeholder="Customer Phone"
+                  type="tel"
+                  className="bg-background"
+                />
+              </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="md:col-span-2 bg-background p-6 rounded-lg flex flex-col">
-            <h3 className="text-lg font-semibold text-cyan-400 mb-4">Order Summary</h3>
-            <ScrollArea className="flex-grow pr-4 -mr-4 no-scrollbar">
-              {orderItems.length > 0 ? (
-                <div className="space-y-2">
-                  {orderItems.map((item) => (
-                    <div key={item.id} className="p-2 rounded-md bg-card">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-grow pr-2">
-                            <span>{item.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-muted-foreground text-xs">x{item.quantity}</span>
-                            <div className="font-mono text-sm text-green-400 flex justify-between w-20">
-                                <span>INR</span>
-                                <span>{item.price * item.quantity}</span>
-                            </div>
-                            <Button
-                            size="icon"
-                            className="h-6 w-6 bg-destructive/20 text-destructive"
-                            onClick={() => handleRemoveItem(item.id)}
-                            >
-                            <Trash2 className="h-4 w-4" />
-                            </Button>
+              <div className="flex-grow flex flex-col overflow-hidden">
+                <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full flex-grow flex flex-col overflow-hidden">
+                  <TabsList className="w-full justify-start overflow-x-auto bg-transparent p-0 pb-2 flex-nowrap no-scrollbar">
+                    {categories.map((cat) => (
+                      <TabsTrigger key={cat} value={cat} className="flex-shrink-0">
+                        {cat}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  <TabsContent value={activeCategory} className="mt-0 flex-grow overflow-hidden">
+                    <ScrollArea className="h-full no-scrollbar">
+                      <div className="space-y-2">
+                        {filteredMenuItems.map((item: MenuItem) => {
+                          const currentItem = orderItems.find(oi => oi.id === item.id);
+                          const quantity = currentItem?.quantity || 0;
+                          return (
+                          <div key={item.id} className={cn("flex items-center justify-between p-2 rounded-md bg-background/50", item.outOfStock && "opacity-50")}>
+                              <div className="flex flex-col">
+                              <span>{item.name}</span>
+                              {item.outOfStock && <span className="text-xs text-destructive">Out of stock</span>}
+                              </div>
+                              <div className="flex items-center gap-4">
+                              <div className="font-mono text-sm text-green-400 flex justify-between w-20">
+                                  <span>INR</span>
+                                  <span>{item.price}</span>
+                              </div>
+                              <div className="flex items-center justify-end w-[90px] h-8">
+                                  {quantity === 0 ? (
+                                      <Button size="sm" className="bg-cyan-500/20 text-cyan-300 w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)} disabled={item.outOfStock}>
+                                          {item.outOfStock ? <Ban className="h-4 w-4" /> : <><Plus className="h-4 w-4 mr-1" /> Add</>}
+                                      </Button>
+                                  ) : (
+                                      <div className="flex items-center gap-2">
+                                          <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity - 1)}>
+                                              <Minus className="h-4 w-4" />
+                                          </Button>
+                                          <span className="font-bold text-center w-4">{quantity}</span>
+                                          <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity + 1)}>
+                                              <Plus className="h-4 w-4" />
+                                          </Button>
+                                      </div>
+                                  )}
+                              </div>
+                              </div>
+                          </div>
+                        )})}
+                      </div>
+                    </ScrollArea>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+
+            {/* Right Column - Order Summary */}
+            <div className="md:col-span-2 bg-background p-6 rounded-lg flex flex-col">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Order Summary</h3>
+              <ScrollArea className="flex-grow pr-4 -mr-4 no-scrollbar">
+                {orderItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {orderItems.map((item) => (
+                      <div key={item.id} className="p-2 rounded-md bg-card">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-grow pr-2">
+                              <span>{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-muted-foreground text-xs">x{item.quantity}</span>
+                              <div className="font-mono text-sm text-green-400 flex justify-between w-20">
+                                  <span>INR</span>
+                                  <span>{item.price * item.quantity}</span>
+                              </div>
+                              <Button
+                              size="icon"
+                              className="h-6 w-6 bg-destructive/20 text-destructive"
+                              onClick={() => handleRemoveItem(item.id)}
+                              >
+                              <Trash2 className="h-4 w-4" />
+                              </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-16 flex items-center justify-center h-full">
-                  <p>No items selected.</p>
-                </div>
-              )}
-            </ScrollArea>
-            <div className="mt-auto pt-4">
-              <Separator className="my-4 bg-white/10" />
-              <div className="flex justify-between items-center font-bold text-xl">
-                <span className="text-muted-foreground">Total:</span>
-                <div className="font-mono text-green-400 flex justify-between w-28">
-                    <span>INR</span>
-                    <span>{total}</span>
-                </div>
-              </div>
-              <Button
-                onClick={handleSubmit}
-                disabled={isSubmitDisabled}
-                className="w-full mt-4 bg-cyan-500/20 text-cyan-300"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                    ))}
+                  </div>
                 ) : (
-                  'Create Order'
+                  <div className="text-center text-muted-foreground py-16 flex items-center justify-center h-full">
+                    <p>No items selected.</p>
+                  </div>
                 )}
-              </Button>
+              </ScrollArea>
+              <div className="mt-auto pt-4">
+                <Separator className="my-4 bg-white/10" />
+                <div className="flex justify-between items-center font-bold text-xl">
+                  <span className="text-muted-foreground">Total:</span>
+                  <div className="font-mono text-green-400 flex justify-between w-28">
+                      <span>INR</span>
+                      <span>{total}</span>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={isSubmitDisabled}
+                  className="w-full mt-4 bg-cyan-500/20 text-cyan-300"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Create Order'
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
+    

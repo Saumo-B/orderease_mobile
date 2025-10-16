@@ -16,6 +16,20 @@ import { cn } from '@/lib/utils';
 
 const FEATURE_FLAGS_KEY = 'featureFlags';
 
+const pageIdMap: { [path: string]: string } = {
+  '/kitchen': 'orders',
+  '/kitchen/dashboard': 'dashboard',
+  '/kitchen/sales-reports': 'salesReport',
+  '/kitchen/inventory': 'inventory',
+  '/kitchen/menu-management': 'menu',
+  '/kitchen/roles': 'roles',
+  '/kitchen/branches': 'branches',
+  '/kitchen/developer-options': 'devOptions',
+  '/kitchen/settings': 'settings',
+  '/kitchen/profile': 'profile'
+};
+
+
 export function KitchenHeader() {
   const {
     fetchKitchenOrders,
@@ -31,7 +45,7 @@ export function KitchenHeader() {
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
   const [isBranchSwitcherOpen, setIsBranchSwitcherOpen] = useState(false);
   
-  const [showBranchSelector, setShowBranchSelector] = useState(true);
+  const [showBranchSelector, setShowBranchSelector] = useState(false);
 
   const isProfilePage = pathname === '/kitchen/profile';
   const isDevOptionsPage = pathname === '/kitchen/developer-options';
@@ -41,39 +55,46 @@ export function KitchenHeader() {
   useEffect(() => {
     setIsClient(true);
     
-    // Feature flag for branch selector
     try {
         const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
         if (storedFlags) {
             const flags = JSON.parse(storedFlags);
-            const isDashboard = pathname === '/kitchen/dashboard';
-            const flagKey = isDashboard ? 'dashboard.branch_selector' : 'orders.branch_selector';
-            setShowBranchSelector(flags[flagKey] ?? true);
+            const pageId = pageIdMap[pathname];
+            
+            if (pageId && flags[pageId] && typeof flags[pageId] === 'object' && flags[pageId].branchSelector) {
+                setShowBranchSelector(true);
+            } else {
+                setShowBranchSelector(false);
+            }
+        } else {
+          setShowBranchSelector(false); 
         }
     } catch (e) {
         console.error("Failed to read feature flags", e);
+        setShowBranchSelector(false);
     }
 
 
     async function fetchBranchesAndSetCurrent() {
-        if (isProfilePage) {
-            // On profile page, we don't need to fetch all branches or show the switcher.
-            // We just need the display name from the static profile.
-            try {
-                 const storedProfile = localStorage.getItem('staticUserProfile');
-                 if (storedProfile) {
-                    const profile = JSON.parse(storedProfile);
-                    if (profile && profile.branchid && profile.branchName) {
-                        setCurrentBranch({ id: profile.branchid, name: profile.branchName });
-                    }
-                 }
-            } catch(e) {
-                console.error("Failed to parse user profile", e);
-            }
-            return;
-        }
-
         try {
+            // Use the dynamic profile to get the currently selected branch
+            const storedUserProfile = localStorage.getItem('userProfile');
+            const currentUserProfile = storedUserProfile ? JSON.parse(storedUserProfile) : null;
+            
+            // Use the static profile to determine the user's base permissions
+            const storedStaticProfile = localStorage.getItem('staticUserProfile');
+            const staticProfile = storedStaticProfile ? JSON.parse(storedStaticProfile) : null;
+
+
+            if (!currentUserProfile || !staticProfile) {
+                return;
+            }
+
+            if (isProfilePage) {
+                setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
+                return;
+            }
+
             const response = await axiosInstance.get('/api/branch');
              if (response.data && Array.isArray(response.data)) {
                 const formattedBranches: Branch[] = response.data.map((item: any) => ({
@@ -83,19 +104,34 @@ export function KitchenHeader() {
                   phone: item.phone,
                   address: item.address,
                 }));
-                setAllBranches(formattedBranches);
+                const sortedBranches = formattedBranches.sort((a,b) => a.name.localeCompare(b.name));
+                
+                // Base the logic on the static profile's branchName
+                if (staticProfile.branchName === 'All') {
+                    const branchesToShow = sortedBranches.filter(b => b.name !== 'All');
+                    setAllBranches(branchesToShow);
 
-                 const storedProfile = localStorage.getItem('userProfile');
-                if (storedProfile) {
-                    const profile = JSON.parse(storedProfile);
-                    if (profile && profile.branchid && profile.branchName) {
-                        setCurrentBranch({ id: profile.branchid, name: profile.branchName });
-                    } else if (formattedBranches.length > 0) {
-                        // If no branch is set, default to the first one
-                        handleBranchSelect(formattedBranches[0]);
+                    // If current user is 'All', default them to the first actual branch
+                    if (currentUserProfile.branchName === 'All' && branchesToShow.length > 0) {
+                        const defaultBranch = branchesToShow[0];
+                        const newProfile = {
+                            ...currentUserProfile,
+                            branchid: defaultBranch.id,
+                            branchName: defaultBranch.name,
+                        };
+                        localStorage.setItem('userProfile', JSON.stringify(newProfile));
+                        setCurrentBranch({ id: defaultBranch.id, name: defaultBranch.name });
+                        // Trigger a refetch of orders after the branch has been updated
+                        fetchKitchenOrders();
+                    } else {
+                        setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
                     }
-                } else if (formattedBranches.length > 0) {
-                    handleBranchSelect(formattedBranches[0]);
+
+                } else {
+                    // If user has a specific branch, show only that one
+                    const userBranch = formattedBranches.find(b => b.id === staticProfile.branchid);
+                    setAllBranches(userBranch ? [userBranch] : []);
+                    setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
                 }
              }
         } catch (e) {
@@ -104,7 +140,7 @@ export function KitchenHeader() {
     }
     
     fetchBranchesAndSetCurrent();
-  }, [isProfilePage, pathname]);
+  }, [isProfilePage, pathname, fetchKitchenOrders]);
 
   const handleBranchSelect = (branch: Branch) => {
     try {
@@ -196,6 +232,9 @@ export function KitchenHeader() {
   
   const HeaderContent = () => {
      const { icon, title } = getPageInfo();
+     const staticProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('staticUserProfile') || '{}') : {};
+     const isAllAccess = staticProfile.branchName === 'All';
+
      return (
         <>
             <div className="flex items-center gap-2">
@@ -214,48 +253,60 @@ export function KitchenHeader() {
                     </h1>
                 </div>
             </div>
-            <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3">
                  {currentBranch && !isProfilePage && !isDevOptionsPage && !isSettingsPage && showBranchSelector && (
-                    <Popover open={isBranchSwitcherOpen} onOpenChange={setIsBranchSwitcherOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
+                    isAllAccess ? (
+                        <Popover open={isBranchSwitcherOpen} onOpenChange={setIsBranchSwitcherOpen}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={isBranchSwitcherOpen}
+                                className="w-[150px] justify-center items-center text-base font-medium text-white h-10 px-4 bg-card/70 border-white/10"
+                                >
+                                    <div className="flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-cyan-300"></div>
+                                    <span className="truncate">{currentBranch.name}</span>
+                                    </div>
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card">
+                                <Command>
+                                <CommandInput placeholder="Search branch..." />
+                                <CommandList>
+                                <CommandEmpty>No branch found.</CommandEmpty>
+                                <CommandGroup>
+                                    {allBranches.map((branch) => (
+                                    <CommandItem
+                                        key={branch.id}
+                                        value={branch.name}
+                                        onSelect={() => handleBranchSelect(branch)}
+                                    >
+                                        <Check
+                                        className={cn(
+                                            "mr-2 h-4 w-4",
+                                            currentBranch.id === branch.id ? "opacity-100" : "opacity-0"
+                                        )}
+                                        />
+                                        {branch.name}
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    ) : (
+                         <Button
                             variant="outline"
-                            role="combobox"
-                            aria-expanded={isBranchSwitcherOpen}
-                            className="w-[180px] justify-center items-center text-base font-medium text-white h-10 px-4 bg-card/70 border-white/10"
+                            className="w-[150px] justify-center items-center text-base font-medium text-white h-10 px-4 bg-card/70 border-white/10 cursor-default"
                             >
                                 <div className="flex items-center gap-2">
-                                  <div className="h-2 w-2 rounded-full bg-cyan-300"></div>
-                                  <span className="truncate">Branch: {currentBranch.name}</span>
+                                <div className="h-2 w-2 rounded-full bg-cyan-300"></div>
+                                <span className="truncate">{currentBranch.name}</span>
                                 </div>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card">
-                            <Command>
-                            <CommandInput placeholder="Search branch..." />
-                            <CommandList>
-                            <CommandEmpty>No branch found.</CommandEmpty>
-                            <CommandGroup>
-                                {allBranches.map((branch) => (
-                                <CommandItem
-                                    key={branch.id}
-                                    value={branch.name}
-                                    onSelect={() => handleBranchSelect(branch)}
-                                >
-                                    <Check
-                                    className={cn(
-                                        "mr-2 h-4 w-4",
-                                        currentBranch.id === branch.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                    />
-                                    {branch.name}
-                                </CommandItem>
-                                ))}
-                            </CommandGroup>
-                            </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
+                        </Button>
+                    )
                 )}
             </div>
         </>

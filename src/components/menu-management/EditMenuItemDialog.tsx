@@ -31,6 +31,8 @@ import { useOrder } from '@/context/OrderContext';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn, getBranchId } from '@/lib/utils';
 import { axiosInstance } from '@/lib/axios-instance';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
 
 interface EditMenuItemDialogProps {
   isOpen: boolean;
@@ -46,6 +48,7 @@ type FormValues = {
   category: string;
   description: string;
   imageUrl: string;
+  manualOutOfStock: boolean;
   recipe: {
     ingredient: string; // Ingredient ID
     qtyRequired: number;
@@ -63,6 +66,7 @@ export function EditMenuItemDialog({
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [dialogLoading, setDialogLoading] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
+  const [isInventoryOutOfStock, setIsInventoryOutOfStock] = useState(false);
 
 
   const {
@@ -80,11 +84,13 @@ export function EditMenuItemDialog({
       category: '',
       description: '',
       imageUrl: '',
+      manualOutOfStock: false,
       recipe: [],
     },
   });
 
   const watchedFields = watch();
+  const manualOutOfStock = watch('manualOutOfStock');
 
   const isFormValid =
     !!watchedFields.name?.trim() &&
@@ -117,7 +123,9 @@ export function EditMenuItemDialog({
 
           // Fetch the detailed menu item with populated recipe
           const menuItemResponse = await axiosInstance.get(`/api/menu/${menuItem.id}`);
-          const detailedMenuItem: { recipe: PopulatedRecipeItem[] } & FullMenuItem = menuItemResponse.data;
+          const detailedMenuItem: { recipe: PopulatedRecipeItem[], manualOutOfStock: boolean, outOfStock: boolean } & FullMenuItem = menuItemResponse.data;
+          
+          setIsInventoryOutOfStock(detailedMenuItem.outOfStock);
 
           // Reset the form with the fetched data
           reset({
@@ -125,7 +133,8 @@ export function EditMenuItemDialog({
             price: detailedMenuItem.price,
             category: detailedMenuItem.category,
             description: detailedMenuItem.description,
-            imageUrl: detailedMenuItem.imageUrl.endsWith('.jpg') ? detailedMenuItem.imageUrl.slice(0, -4) : detailedMenuItem.imageUrl,
+            imageUrl: detailedMenuItem.imageUrl,
+            manualOutOfStock: detailedMenuItem.manualOutOfStock,
             recipe: detailedMenuItem.recipe.map(r => ({
               ingredient: r.ingredient._id,
               qtyRequired: r.qtyRequired
@@ -179,77 +188,85 @@ export function EditMenuItemDialog({
         <DialogHeader>
           <DialogTitle className="text-cyan-400">Update Item</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-grow no-scrollbar">
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {dialogLoading ? (
-                  <div className="md:col-span-2 flex justify-center items-center min-h-[490px]">
-                    <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+        {dialogLoading ? (
+          <div className="flex justify-center items-center flex-grow">
+            <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+          </div>
+        ) : dialogError ? (
+          <div className="flex flex-col justify-center items-center flex-grow text-destructive">
+            <AlertTriangle className="h-8 w-8 mb-2" />
+            <p>{dialogError}</p>
+          </div>
+        ) : (
+          <ScrollArea className="flex-grow no-scrollbar">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                      <Input placeholder="Name" {...register('name', { required: true })} onChange={handleAlphaInputChange} className="bg-background" />
+                      <Input placeholder="Category" {...register('category', { required: true })} onChange={handleAlphaInputChange} className="bg-background" />
+                      <Input type="number" step="0.01" placeholder="Price" {...register('price', { required: true, valueAsNumber: true })} className="bg-background" />
+                      <Textarea placeholder="Description" {...register('description')} className="bg-background h-[182px]" />
+                      <Input placeholder="Image URL" {...register('imageUrl', { required: true })} className="bg-background" />
+                      <div className="flex items-center justify-between bg-background p-3 rounded-md">
+                        <Label htmlFor="manualOutOfStock" className={cn("text-white", isInventoryOutOfStock && "text-muted-foreground")}>Out of stock</Label>
+                        <Switch
+                            id="manualOutOfStock"
+                            {...register('manualOutOfStock')}
+                            checked={isInventoryOutOfStock || manualOutOfStock}
+                            onCheckedChange={(checked) => setValue('manualOutOfStock', checked, { shouldDirty: true })}
+                            disabled={isInventoryOutOfStock}
+                        />
+                      </div>
                   </div>
-                ) : dialogError ? (
-                  <div className="md:col-span-2 flex flex-col justify-center items-center text-destructive min-h-[490px]">
-                    <AlertTriangle className="h-8 w-8 mb-2" />
-                    <p>{dialogError}</p>
-                  </div>
-                ) : (
-                  <>
-                    {/* Left Column */}
-                    <div className="space-y-4">
-                        <Input placeholder="Name" {...register('name', { required: true })} onChange={handleAlphaInputChange} className="bg-background" />
-                        <Input placeholder="Category" {...register('category', { required: true })} onChange={handleAlphaInputChange} className="bg-background" />
-                        <Input type="number" step="0.01" placeholder="Price" {...register('price', { required: true, valueAsNumber: true })} className="bg-background" />
-                        <Textarea placeholder="Description" {...register('description')} className="bg-background h-[234px]" />
-                        <Input placeholder="Image URL" {...register('imageUrl', { required: true })} className="bg-background" />
-                    </div>
 
-                    {/* Right Column */}
-                    <div className="bg-background p-6 rounded-lg flex flex-col h-[458px]">
-                        <RecipeArray control={control} ingredients={ingredients} />
-                    </div>
-                  </>
-                )}
+                  {/* Right Column */}
+                  <div className="bg-background p-6 rounded-lg flex flex-col h-[458px]">
+                      <RecipeArray control={control} ingredients={ingredients} />
+                  </div>
+                </div>
+                <DialogFooter className="mt-6 flex flex-col gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button type="button" variant="destructive" className="w-full bg-destructive/20 text-destructive border-0">
+                            Delete Item
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the menu item. This action cannot be undone.
+                        </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-cyan-500/20 text-cyan-300 border-0")}>No, Go Back</AlertDialogCancel>
+                          <AlertDialogAction
+                            className={cn(buttonVariants({ variant: 'destructive' }), "bg-destructive/20 text-destructive border-0")}
+                            onClick={handleDelete}
+                          >
+                            Yes, Delete Item
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button
+                      type="submit"
+                      className="w-full bg-cyan-500/20 text-cyan-300"
+                      disabled={isSubmitting || dialogLoading || !!dialogError || !isDirty || !isFormValid}
+                  >
+                      {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                      'Update Item'
+                      )}
+                  </Button>
+                </DialogFooter>
               </div>
-              <DialogFooter className="mt-6 flex flex-col gap-2">
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" className="w-full bg-destructive/20 text-destructive border-0">
-                          Delete Item
-                      </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                      <AlertDialogHeader>
-                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                          This will permanently delete the menu item. This action cannot be undone.
-                      </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-cyan-500/20 text-cyan-300 border-0")}>No, Go Back</AlertDialogCancel>
-                        <AlertDialogAction
-                          className={cn(buttonVariants({ variant: 'destructive' }), "bg-destructive/20 text-destructive border-0")}
-                          onClick={handleDelete}
-                        >
-                          Yes, Delete Item
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-                <Button
-                    type="submit"
-                    className="w-full bg-cyan-500/20 text-cyan-300"
-                    disabled={isSubmitting || dialogLoading || !!dialogError || !isDirty || !isFormValid}
-                >
-                    {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                    'Update Item'
-                    )}
-                </Button>
-              </DialogFooter>
-            </div>
-          </form>
-        </ScrollArea>
+            </form>
+          </ScrollArea>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -371,7 +388,3 @@ function IngredientSelector({ ingredients, onSelect, onClose }: { ingredients: I
     </div>
   );
 }
-
-    
-
-    

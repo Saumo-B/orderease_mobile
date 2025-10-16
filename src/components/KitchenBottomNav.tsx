@@ -32,11 +32,11 @@ import { Skeleton } from './ui/skeleton';
 const mainNavItems = [
   { icon: Search, label: 'Orders', href: '/kitchen', id: 'orders' },
   { icon: LayoutDashboard, label: 'Dashboard', href: '/kitchen/dashboard', id: 'dashboard' },
-  { icon: BarChart, label: 'Sales', href: '/kitchen/sales-reports', id: 'sales-report' },
+  { icon: BarChart, label: 'Sales', href: '/kitchen/sales-reports', id: 'salesReport' },
   { icon: Boxes, label: 'Inventory', href: '/kitchen/inventory', id: 'inventory' },
   { icon: BookOpen, label: 'Menu', href: '/kitchen/menu-management', id: 'menu' },
   { icon: Users, label: 'Roles', href: '/kitchen/roles', id: 'roles' },
-  { icon: Building, label: 'Outlets', href: '/kitchen/branches', id: 'outlets' },
+  { icon: Building, label: 'Outlets', href: '/kitchen/branches', id: 'branches' },
 ];
 
 const baseSheetMenuItems = [
@@ -59,7 +59,18 @@ export function KitchenBottomNav() {
     try {
       const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
       const flags = storedFlags ? JSON.parse(storedFlags) : {};
-      const visibleItems = mainNavItems.filter(item => flags[item.id] !== false);
+      
+      const visibleItems = mainNavItems.filter(item => {
+        const flag = flags[item.id];
+        if (typeof flag === 'boolean') {
+            return flag;
+        }
+        if (typeof flag === 'object' && flag !== null) {
+            return flag.type === true;
+        }
+        return true; // Default to show
+      });
+
       setVisibleMainNavItems(visibleItems);
       
       const userProfile = localStorage.getItem('userProfile');
@@ -85,6 +96,7 @@ export function KitchenBottomNav() {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userProfile');
     localStorage.removeItem('staticUserProfile');
+    localStorage.removeItem(FEATURE_FLAGS_KEY);
     router.push('/');
     setIsSheetOpen(false);
   };
