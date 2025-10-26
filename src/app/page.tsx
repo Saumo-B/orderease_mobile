@@ -18,6 +18,7 @@ import { Loader2 } from 'lucide-react';
 import { axiosInstance } from '@/lib/axios-instance';
 
 const FEATURE_FLAGS_KEY = 'featureFlags';
+const THEME_SETTINGS_KEY = 'themeSettings';
 
 export default function LandingPage() {
   // Login State
@@ -60,15 +61,12 @@ export default function LandingPage() {
                 localStorage.setItem(FEATURE_FLAGS_KEY, JSON.stringify(accessResponse.data.accessControl));
             } else {
                  console.warn("Could not fetch feature flags, using defaults.");
-                 // Set default flags if API fails, or clear them
                  localStorage.removeItem(FEATURE_FLAGS_KEY);
             }
         } catch (accessErr) {
             console.error('Failed to fetch access controls:', accessErr);
-            // Handle failure to fetch flags - maybe set defaults or clear them
             localStorage.removeItem(FEATURE_FLAGS_KEY);
         }
-
 
         router.push('/kitchen');
       } else {
@@ -92,7 +90,7 @@ export default function LandingPage() {
     <div className="flex justify-center bg-background text-foreground min-h-screen">
       <main className="w-full max-w-md flex flex-col justify-center p-4">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold font-headline text-cyan-400">
+          <h1 className="text-4xl font-bold font-headline text-primary">
             Welcome to OrderEase
           </h1>
           <p className="text-lg text-muted-foreground mt-4">
@@ -101,9 +99,9 @@ export default function LandingPage() {
         </div>
 
         <div className="flex flex-col">
-          <Card className="w-full">
+          <Card className="w-full bg-card/70 border-border">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold font-headline text-cyan-400">
+              <CardTitle className="text-2xl font-bold font-headline text-primary">
                 Login
               </CardTitle>
               <CardDescription>Access your kitchen</CardDescription>
@@ -153,7 +151,7 @@ export default function LandingPage() {
           </Card>
         </div>
         <footer className="text-center p-4 text-muted-foreground text-sm mt-8">
-          Powered by <span className="text-cyan-400">OrderEase</span> © 2025
+          Powered by <span className="text-primary">OrderEase</span> © 2025
         </footer>
       </main>
     </div>

@@ -66,12 +66,12 @@ export default function RolesPage() {
   
   const addStaffCard = (
     <Card
-        className="h-24 flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        className="h-24 flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
         onClick={() => setIsAddStaffDialogOpen(true)}
     >
         <CardContent className="flex flex-col items-center justify-center text-center p-6">
-        <Plus className="h-8 w-8 text-white transition-colors" />
-        <p className="mt-2 text-sm font-semibold text-white transition-colors">
+        <Plus className="h-8 w-8 text-foreground transition-colors" />
+        <p className="mt-2 text-sm font-semibold text-foreground transition-colors">
             Add Staff
         </p>
         </CardContent>
@@ -93,7 +93,7 @@ export default function RolesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {addStaffCard}
             {staff.map((member) => (
-                 <Card key={member.id} className="w-full group bg-card/70 border-white/10 shadow-lg duration-300 h-24 flex flex-col justify-center">
+                 <Card key={member.id} className="w-full group bg-card/70 border-border duration-300 h-24 flex flex-col justify-center">
                     <CardContent className="p-4 flex items-center justify-between text-sm">
                         <div className="flex items-center gap-4">
                             <Avatar className="bg-cyan-500/20 text-cyan-300">
@@ -101,7 +101,7 @@ export default function RolesPage() {
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                                <p className="font-semibold text-white transition-colors">{member.name}</p>
+                                <p className="font-semibold text-foreground transition-colors">{member.name}</p>
                                 <p className="text-sm text-muted-foreground">{member.email}</p>
                             </div>
                         </div>

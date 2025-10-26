@@ -74,15 +74,15 @@ export function StatCards({ data }: StatCardsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (
-        <Card key={stat.title} className="bg-card/70 border-white/10 shadow-lg flex flex-col group duration-300">
+        <Card key={stat.title} className="bg-card/70 border-border flex flex-col group duration-300">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-white/70 transition-colors">
+            <CardTitle className="text-sm font-medium text-muted-foreground transition-colors">
               {stat.title}
             </CardTitle>
             <stat.icon className={`h-5 w-5 ${stat.color}`} />
           </CardHeader>
           <CardContent className="flex-grow p-4 pt-0">
-            <div className="text-3xl font-bold text-white transition-colors">{stat.value}</div>
+            <div className="text-3xl font-bold text-foreground transition-colors">{stat.value}</div>
             <p className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
               {stat.footer}
             </p>

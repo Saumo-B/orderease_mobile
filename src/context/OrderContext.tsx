@@ -2,14 +2,13 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput } from '@/lib/types';
+import type { Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput, Branch } from '@/lib/types';
 import { axiosInstance } from '@/lib/axios-instance';
 import { usePathname } from 'next/navigation';
 import { getBranchId } from '@/lib/utils';
 
 interface OrderContextType {
   kitchenOrders: Order[];
-  loading: boolean; // For kitchen orders
   error: string | null;
   fetchKitchenOrders: () => Promise<void>;
   setKitchenOrders: React.Dispatch<React.SetStateAction<Order[]>>;
@@ -31,6 +30,15 @@ interface OrderContextType {
   setIsAddStaffDialogOpen: (isOpen: boolean) => void;
   isAddBranchDialogOpen: boolean;
   setIsAddBranchDialogOpen: (isOpen: boolean) => void;
+  
+  // New state for centralized loading
+  isPageLoading: boolean;
+  branchLoading: boolean;
+
+  // New state for branch management
+  currentBranch: { id: string; name: string } | null;
+  allBranches: Branch[];
+  handleBranchSelect: (branch: Branch) => void;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -70,7 +78,6 @@ const mapBackendOrderToFrontend = (order: any): Order => {
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [kitchenOrders, setKitchenOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddMenuItemDialogOpen, setIsAddMenuItemDialogOpen] = useState(false);
   const [isAddIngredientDialogOpen, setIsAddIngredientDialogOpen] = useState(false);
@@ -78,20 +85,91 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [isAddBranchDialogOpen, setIsAddBranchDialogOpen] = useState(false);
   const pathname = usePathname();
 
+  // Centralized loading and branch state
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [branchLoading, setBranchLoading] = useState(true);
+  const [currentBranch, setCurrentBranch] = useState<{ id: string; name: string } | null>(null);
+  const [allBranches, setAllBranches] = useState<Branch[]>([]);
 
-  const fetchKitchenOrders = useCallback(async () => {
+  const fetchBranchData = useCallback(async () => {
+    setBranchLoading(true);
     try {
-      setLoading(true);
-      setError(null);
-      const branchId = getBranchId();
-      if (!branchId || branchId === '68d6fda5bab89f8afc545cee') { // Do not fetch for "All" branch ID
-        setKitchenOrders([]);
-        setLoading(false);
+      const storedUserProfile = localStorage.getItem('userProfile');
+      const currentUserProfile = storedUserProfile ? JSON.parse(storedUserProfile) : null;
+      
+      const storedStaticProfile = localStorage.getItem('staticUserProfile');
+      const staticProfile = storedStaticProfile ? JSON.parse(storedStaticProfile) : null;
+
+      if (!currentUserProfile || !staticProfile) {
+        setBranchLoading(false);
         return;
       }
-      const res = await axiosInstance.get(
-        `/api/kitchen/today?branch=${branchId}`
-      );
+
+      // Set current branch immediately for responsiveness
+      setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
+
+      if (staticProfile.branchName === 'All') {
+        const response = await axiosInstance.get('/api/branch');
+        if (response.data && Array.isArray(response.data)) {
+          const formattedBranches: Branch[] = response.data.map((item: any) => ({
+            id: item._id,
+            name: item.name,
+            pin: item.PIN,
+            phone: item.phone,
+            address: item.address,
+          }));
+          const sortedBranches = formattedBranches.sort((a,b) => a.name.localeCompare(b.name));
+          const branchesToShow = sortedBranches.filter(b => b.name !== 'All');
+          setAllBranches(branchesToShow);
+
+          if (currentUserProfile.branchName === 'All' && branchesToShow.length > 0) {
+              const defaultBranch = branchesToShow[0];
+              handleBranchSelect(defaultBranch, false); // Don't reload page
+          }
+        }
+      } else {
+        // User has a specific branch, only show that
+        setAllBranches([{ id: staticProfile.branchid, name: staticProfile.branchName, pin: '', phone: '', address: ''}]);
+      }
+    } catch (e) {
+      console.error("Failed to fetch branches", e);
+    } finally {
+      setBranchLoading(false);
+    }
+  }, []);
+
+  const handleBranchSelect = (branch: Branch, reload = true) => {
+    try {
+        const storedProfile = localStorage.getItem('userProfile');
+        const profile = storedProfile ? JSON.parse(storedProfile) : {};
+        
+        const newProfile = {
+            ...profile,
+            branchid: branch.id,
+            branchName: branch.name,
+        };
+
+        localStorage.setItem('userProfile', JSON.stringify(newProfile));
+        setCurrentBranch({ id: branch.id, name: branch.name });
+
+        if (reload) {
+          window.location.reload();
+        }
+    } catch(e) {
+        console.error("Failed to update branch selection", e);
+    }
+  };
+
+  const fetchKitchenOrders = useCallback(async () => {
+    setIsPageLoading(true);
+    try {
+      setError(null);
+      const branchId = getBranchId();
+      if (!branchId || branchId === '68d6fda5bab89f8afc545cee') { 
+        setKitchenOrders([]);
+        return;
+      }
+      const res = await axiosInstance.get(`/api/kitchen/today?branch=${branchId}`);
       const backendOrders = res.data.orders || [];
 
       const fetchedOrders: Order[] = backendOrders.map(mapBackendOrderToFrontend);
@@ -101,22 +179,26 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error fetching kitchen orders:', err);
       setError('Could not fetch kitchen orders. Please try again later.');
     } finally {
-      setLoading(false);
+      setIsPageLoading(false);
     }
   }, []);
   
   useEffect(() => {
-    const isKitchenPage = pathname.startsWith('/kitchen');
-    const isAuthPage = pathname === '/kitchen/login' || pathname === '/kitchen/register';
-    const kitchenPagesThatNeedOrders = ['/kitchen', '/kitchen/dashboard'];
-
-
-    if (isKitchenPage && !isAuthPage && kitchenPagesThatNeedOrders.includes(pathname)) {
-      fetchKitchenOrders();
-    } else {
-      setLoading(false);
+    const isAuthPage = pathname === '/kitchen/login' || pathname === '/kitchen/register' || pathname === '/';
+    if (isAuthPage) {
+      setIsPageLoading(false);
+      setBranchLoading(false);
+      return;
     }
-  }, [fetchKitchenOrders, pathname]);
+    
+    async function loadInitialData() {
+      await fetchBranchData();
+      await fetchKitchenOrders();
+    }
+
+    loadInitialData();
+
+  }, [pathname, fetchBranchData, fetchKitchenOrders]);
 
  const completeOrder = async (id: string): Promise<boolean> => {
     try {
@@ -166,7 +248,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error(`Failed to mark order ${id} as paid:`, error);
-      // Removed toast
       return false;
     }
   };
@@ -197,7 +278,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (res.status === 200 && res.data.order) {
-        // We can just refetch all orders to get the latest state
         await fetchKitchenOrders();
         return true;
       } else {
@@ -205,7 +285,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error(`Failed to update order ${orderId}:`, error);
-       // Removed toast
       return false;
     }
   };
@@ -228,7 +307,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error(`Failed to cancel order ${orderId}:`, error);
-      // Removed toast
       return false;
     }
   };
@@ -257,11 +335,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const updateMenuItem = async (menuId: string, data: Partial<FullMenuItem>): Promise<boolean> => {
     try {
       await axiosInstance.patch(`/api/menu/${menuId}`, data);
-      // Removed toast
       return true;
     } catch (error) {
       console.error(`Failed to update menu item ${menuId}:`, error);
-      // Removed toast
       return false;
     }
   };
@@ -269,11 +345,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const deleteMenuItem = async (menuId: string): Promise<boolean> => {
     try {
       await axiosInstance.delete(`/api/menu/${menuId}`);
-      // Removed toast
       return true;
     } catch (error) {
       console.error(`Failed to delete menu item ${menuId}:`, error);
-      // Removed toast
       return false;
     }
   };
@@ -317,7 +391,6 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     <OrderContext.Provider
       value={{
         kitchenOrders,
-        loading,
         error,
         setKitchenOrders,
         fetchKitchenOrders,
@@ -339,6 +412,11 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setIsAddStaffDialogOpen,
         isAddBranchDialogOpen,
         setIsAddBranchDialogOpen,
+        isPageLoading,
+        branchLoading,
+        currentBranch,
+        allBranches,
+        handleBranchSelect,
       }}
     >
       {children}

@@ -2,7 +2,7 @@
 'use client';
 
 import { OrderCard } from '@/components/OrderCard';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useOrder } from '@/context/OrderContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CreateOrderDialog } from '@/components/CreateOrderDialog';
@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function KitchenPage() {
-  const { kitchenOrders, loading, error, fetchKitchenOrders } = useOrder();
+  const { kitchenOrders, error, fetchKitchenOrders } = useOrder();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const newOrders = kitchenOrders
@@ -36,26 +36,18 @@ export default function KitchenPage() {
       onOrderCreated={handleOrderCreated}
     >
       <Card
-        className="h-[150px] flex items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        className="h-[150px] flex items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
         onClick={() => setIsCreateDialogOpen(true)}
       >
         <CardContent className="flex flex-row items-center justify-center text-center p-6">
-          <Plus className="h-8 w-8 text-white transition-colors" />
-          <p className="ml-4 text-base font-semibold text-white transition-colors">
+          <Plus className="h-8 w-8 text-foreground transition-colors" />
+          <p className="ml-4 text-base font-semibold text-foreground transition-colors">
             Create Order
           </p>
         </CardContent>
       </Card>
     </CreateOrderDialog>
   );
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <>

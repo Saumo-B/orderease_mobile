@@ -2,17 +2,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { CreateOrderDialog } from '@/components/CreateOrderDialog';
-import { useState, useEffect } from 'react';
-import { KitchenSidebar } from '@/components/KitchenSidebar';
-import { Plus, Search, LayoutDashboard, BarChart, Boxes, BookOpen, User, Building, Users, Check, ChevronsUpDown, Code, Settings } from 'lucide-react';
+import { Search, LayoutDashboard, BarChart, Boxes, BookOpen, User, Building, Users, Check, Code, Settings } from 'lucide-react';
 import { useOrder } from '@/context/OrderContext';
 import { usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
 import type { Branch } from '@/lib/types';
-import { axiosInstance } from '@/lib/axios-instance';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
 const FEATURE_FLAGS_KEY = 'featureFlags';
 
@@ -31,20 +28,10 @@ const pageIdMap: { [path: string]: string } = {
 
 
 export function KitchenHeader() {
-  const {
-    fetchKitchenOrders,
-    setIsAddMenuItemDialogOpen,
-    setIsAddIngredientDialogOpen,
-    setIsAddStaffDialogOpen,
-    setIsAddBranchDialogOpen,
-  } = useOrder();
+  const { currentBranch, allBranches, handleBranchSelect } = useOrder();
   const pathname = usePathname();
-  const [isClient, setIsClient] = useState(false);
   
-  const [currentBranch, setCurrentBranch] = useState<{ id: string; name: string } | null>(null);
-  const [allBranches, setAllBranches] = useState<Branch[]>([]);
   const [isBranchSwitcherOpen, setIsBranchSwitcherOpen] = useState(false);
-  
   const [showBranchSelector, setShowBranchSelector] = useState(false);
 
   const isProfilePage = pathname === '/kitchen/profile';
@@ -53,8 +40,6 @@ export function KitchenHeader() {
 
 
   useEffect(() => {
-    setIsClient(true);
-    
     try {
         const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
         if (storedFlags) {
@@ -73,99 +58,7 @@ export function KitchenHeader() {
         console.error("Failed to read feature flags", e);
         setShowBranchSelector(false);
     }
-
-
-    async function fetchBranchesAndSetCurrent() {
-        try {
-            // Use the dynamic profile to get the currently selected branch
-            const storedUserProfile = localStorage.getItem('userProfile');
-            const currentUserProfile = storedUserProfile ? JSON.parse(storedUserProfile) : null;
-            
-            // Use the static profile to determine the user's base permissions
-            const storedStaticProfile = localStorage.getItem('staticUserProfile');
-            const staticProfile = storedStaticProfile ? JSON.parse(storedStaticProfile) : null;
-
-
-            if (!currentUserProfile || !staticProfile) {
-                return;
-            }
-
-            if (isProfilePage) {
-                setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
-                return;
-            }
-
-            const response = await axiosInstance.get('/api/branch');
-             if (response.data && Array.isArray(response.data)) {
-                const formattedBranches: Branch[] = response.data.map((item: any) => ({
-                  id: item._id,
-                  name: item.name,
-                  pin: item.PIN,
-                  phone: item.phone,
-                  address: item.address,
-                }));
-                const sortedBranches = formattedBranches.sort((a,b) => a.name.localeCompare(b.name));
-                
-                // Base the logic on the static profile's branchName
-                if (staticProfile.branchName === 'All') {
-                    const branchesToShow = sortedBranches.filter(b => b.name !== 'All');
-                    setAllBranches(branchesToShow);
-
-                    // If current user is 'All', default them to the first actual branch
-                    if (currentUserProfile.branchName === 'All' && branchesToShow.length > 0) {
-                        const defaultBranch = branchesToShow[0];
-                        const newProfile = {
-                            ...currentUserProfile,
-                            branchid: defaultBranch.id,
-                            branchName: defaultBranch.name,
-                        };
-                        localStorage.setItem('userProfile', JSON.stringify(newProfile));
-                        setCurrentBranch({ id: defaultBranch.id, name: defaultBranch.name });
-                        // Trigger a refetch of orders after the branch has been updated
-                        fetchKitchenOrders();
-                    } else {
-                        setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
-                    }
-
-                } else {
-                    // If user has a specific branch, show only that one
-                    const userBranch = formattedBranches.find(b => b.id === staticProfile.branchid);
-                    setAllBranches(userBranch ? [userBranch] : []);
-                    setCurrentBranch({ id: currentUserProfile.branchid, name: currentUserProfile.branchName });
-                }
-             }
-        } catch (e) {
-            console.error("Failed to fetch branches or parse user profile", e);
-        }
-    }
-    
-    fetchBranchesAndSetCurrent();
-  }, [isProfilePage, pathname, fetchKitchenOrders]);
-
-  const handleBranchSelect = (branch: Branch) => {
-    try {
-        const storedProfile = localStorage.getItem('userProfile');
-        const profile = storedProfile ? JSON.parse(storedProfile) : {};
-        
-        const newProfile = {
-            ...profile,
-            branchid: branch.id,
-            branchName: branch.name,
-        };
-
-        // Only update the dynamic userProfile, not the static one
-        localStorage.setItem('userProfile', JSON.stringify(newProfile));
-        setCurrentBranch({ id: branch.id, name: branch.name });
-        setIsBranchSwitcherOpen(false);
-
-        // Reload the page to ensure all data is refetched for the new branch
-        window.location.reload();
-
-    } catch(e) {
-        console.error("Failed to update branch selection", e);
-    }
-  };
-
+  }, [pathname]);
 
   const getPageInfo = () => {
     if (pathname === '/kitchen/dashboard') {
@@ -228,30 +121,29 @@ export function KitchenHeader() {
     };
   };
 
+  const onBranchSelect = (branch: Branch) => {
+    handleBranchSelect(branch);
+    setIsBranchSwitcherOpen(false);
+  }
 
-  
-  const HeaderContent = () => {
-     const { icon, title } = getPageInfo();
-     const staticProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('staticUserProfile') || '{}') : {};
-     const isAllAccess = staticProfile.branchName === 'All';
+  const { icon, title } = getPageInfo();
+  const staticProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('staticUserProfile') || '{}') : {};
+  const isAllAccess = staticProfile.branchName === 'All';
 
-     return (
-        <>
+  return (
+    <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-10 border-b border-border">
+       <div className="max-w-4xl mx-auto">
+          <div className="p-4 flex justify-between items-center min-h-[80px]">
             <div className="flex items-center gap-2">
-                <div className="hidden md:block">
-                  <KitchenSidebar />
-                </div>
-                 <div className="flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      className="bg-cyan-500/20 text-cyan-300 p-2 rounded-lg pointer-events-none"
-                    >
-                      {icon}
-                    </Button>
-                    <h1 className="text-xl font-bold font-headline text-white">
-                    {title}
-                    </h1>
-                </div>
+                <Button
+                  size="icon"
+                  className="bg-primary/20 text-primary p-2 rounded-lg pointer-events-none"
+                >
+                  {icon}
+                </Button>
+                <h1 className="text-xl font-bold font-headline text-foreground">
+                {title}
+                </h1>
             </div>
              <div className="flex items-center gap-3">
                  {currentBranch && !isProfilePage && !isDevOptionsPage && !isSettingsPage && showBranchSelector && (
@@ -262,10 +154,10 @@ export function KitchenHeader() {
                                 variant="outline"
                                 role="combobox"
                                 aria-expanded={isBranchSwitcherOpen}
-                                className="w-[150px] justify-center items-center text-base font-medium text-white h-10 px-4 bg-card/70 border-white/10"
+                                className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border"
                                 >
                                     <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-cyan-300"></div>
+                                    <div className="h-2 w-2 rounded-full bg-primary"></div>
                                     <span className="truncate">{currentBranch.name}</span>
                                     </div>
                                 </Button>
@@ -280,7 +172,7 @@ export function KitchenHeader() {
                                     <CommandItem
                                         key={branch.id}
                                         value={branch.name}
-                                        onSelect={() => handleBranchSelect(branch)}
+                                        onSelect={() => onBranchSelect(branch)}
                                     >
                                         <Check
                                         className={cn(
@@ -299,31 +191,18 @@ export function KitchenHeader() {
                     ) : (
                          <Button
                             variant="outline"
-                            className="w-[150px] justify-center items-center text-base font-medium text-white h-10 px-4 bg-card/70 border-white/10 cursor-default"
+                            className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border cursor-default"
                             >
                                 <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-cyan-300"></div>
+                                <div className="h-2 w-2 rounded-full bg-primary"></div>
                                 <span className="truncate">{currentBranch.name}</span>
                                 </div>
                         </Button>
                     )
                 )}
             </div>
-        </>
-     )
-  }
-
-
-  return (
-    <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-10 border-b border-white/10">
-      <div className="p-4 flex justify-between items-center min-h-[80px]">
-        {isClient ? <HeaderContent /> : (
-            <div className="w-full flex justify-between">
-                <div className="h-10 w-1/3 bg-muted/50 animate-pulse rounded-md"></div>
-                <div className="h-10 w-1/4 bg-muted/50 animate-pulse rounded-md"></div>
-            </div>
-        )}
-      </div>
+          </div>
+       </div>
     </header>
   );
 }

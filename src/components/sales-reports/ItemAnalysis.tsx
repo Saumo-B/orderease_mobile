@@ -20,7 +20,7 @@ export function ItemAnalysis({ data }: ItemAnalysisProps) {
   const chartConfig = {
     quantity: {
       label: 'Quantity Sold',
-      color: '#22d3ee', // Cyan-400
+      color: 'hsl(var(--primary))',
     },
     revenue: {
       label: 'Revenue',
@@ -29,9 +29,9 @@ export function ItemAnalysis({ data }: ItemAnalysisProps) {
   };
 
   return (
-    <Card className="group bg-card/70 border-white/10 shadow-lg h-full duration-300">
+    <Card className="group bg-card/70 border-border h-full duration-300">
       <CardHeader>
-        <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">Top-Selling Items</CardTitle>
+        <CardTitle className="text-foreground group-hover:text-primary transition-colors">Top-Selling Items</CardTitle>
         <CardDescription>Your most popular menu items by quantity sold.</CardDescription>
       </CardHeader>
       <CardContent>

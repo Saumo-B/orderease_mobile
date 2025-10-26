@@ -22,7 +22,7 @@ export function StaffList({ staff }: StaffListProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {staff.map((member) => (
-            <Card key={member.id} className="w-full group bg-card/70 border-white/10 shadow-lg transition-all duration-300 hover:-translate-y-1">
+            <Card key={member.id} className="w-full group bg-card/70 border-border transition-all duration-300 hover:-translate-y-1">
                 <CardContent className="p-4 flex items-center justify-between text-sm">
                     <div className="flex items-center gap-4">
                         <Avatar>
@@ -30,7 +30,7 @@ export function StaffList({ staff }: StaffListProps) {
                             <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className="font-semibold text-white transition-colors group-hover:text-cyan-400">{member.name}</p>
+                            <p className="font-semibold text-foreground transition-colors group-hover:text-cyan-400">{member.name}</p>
                             <p className="text-sm text-muted-foreground">{member.email}</p>
                         </div>
                     </div>

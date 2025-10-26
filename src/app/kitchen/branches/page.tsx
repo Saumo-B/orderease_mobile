@@ -64,12 +64,12 @@ export default function BranchesPage() {
   
   const addBranchCard = (
      <Card
-        className="h-20 flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        className="h-20 flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
         onClick={() => setIsAddBranchDialogOpen(true)}
       >
         <CardContent className="flex flex-col items-center justify-center text-center p-6">
-          <Plus className="h-8 w-8 text-white transition-colors" />
-          <p className="mt-2 text-sm font-semibold text-white transition-colors">
+          <Plus className="h-8 w-8 text-foreground transition-colors" />
+          <p className="mt-2 text-sm font-semibold text-foreground transition-colors">
             Add Branch
           </p>
         </CardContent>
@@ -93,12 +93,12 @@ export default function BranchesPage() {
             {branches.map((branch) => (
                 <Card 
                     key={branch.id} 
-                    className="w-full group bg-card/70 border-white/10 shadow-lg duration-300 cursor-pointer h-20 flex flex-col justify-center"
+                    className="w-full group bg-card/70 border-border duration-300 cursor-pointer h-20 flex flex-col justify-center"
                     onClick={() => handleEditClick(branch)}
                 >
                   <CardContent className="p-4 text-sm flex justify-between items-center">
                     <div className="flex-grow">
-                        <p className="font-bold text-lg text-white transition-colors truncate">
+                        <p className="font-bold text-lg text-foreground transition-colors truncate">
                             {branch.name}
                         </p>
                     </div>

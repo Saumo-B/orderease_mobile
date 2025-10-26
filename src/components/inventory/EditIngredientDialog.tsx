@@ -133,9 +133,12 @@ export function EditIngredientDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md bg-card border-border">
+      <DialogContent 
+        className="sm:max-w-md bg-card border-border"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Update Ingredient</DialogTitle>
+          <DialogTitle className="text-primary">Update Ingredient</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-4">
@@ -232,7 +235,7 @@ export function EditIngredientDialog({
             <DialogFooter className="flex-col-reverse sm:flex-col-reverse gap-2 mt-4">
               <Button
                 type="submit"
-                className="w-full bg-cyan-500/20 text-cyan-300"
+                className="w-full bg-primary/20 text-primary"
                 disabled={isSubmitting || !isValid || !isDirty}
               >
                 {isSubmitting ? (
@@ -263,7 +266,7 @@ export function EditIngredientDialog({
                     <AlertDialogCancel
                       className={cn(
                         buttonVariants({ variant: 'outline' }),
-                        'bg-cyan-500/20 text-cyan-300 border-0'
+                        'bg-primary/20 text-primary border-0'
                       )}
                     >
                       No, Go Back

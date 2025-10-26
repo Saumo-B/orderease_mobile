@@ -20,10 +20,10 @@ interface CustomerAnalysisProps {
   paymentData: { method: string, count: number }[];
 }
 
-const customerColors = ['#22d3ee', '#22c55e']; // cyan-400, green-500
+const customerColors = ['hsl(var(--primary))', '#22c55e']; // primary, green-500
 
 const allPaymentMethods = [
-    { method: 'unknown', color: '#22d3ee', icon: HelpCircle }, // cyan-400
+    { method: 'unknown', color: 'hsl(var(--primary))', icon: HelpCircle },
     { method: 'counter', color: '#22c55e', icon: Wallet },     // green-500
 ];
 
@@ -56,9 +56,9 @@ export function CustomerAnalysis({ customerData, paymentData }: CustomerAnalysis
 
   return (
     <div className="space-y-6">
-      <Card className="bg-card/70 border-white/10 shadow-lg duration-300 group">
+      <Card className="bg-card/70 border-border duration-300 group">
         <CardHeader>
-          <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">Customer Insights</CardTitle>
+          <CardTitle className="text-foreground group-hover:text-primary transition-colors">Customer Insights</CardTitle>
           <CardDescription>A look at your customer base.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -88,7 +88,7 @@ export function CustomerAnalysis({ customerData, paymentData }: CustomerAnalysis
             </div>
              <div className="space-y-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-cyan-500/20 text-cyan-400 rounded-md">
+                    <div className="p-2 bg-primary/20 text-primary rounded-md">
                         <UserPlus className="h-5 w-5"/>
                     </div>
                     <div>
@@ -109,9 +109,9 @@ export function CustomerAnalysis({ customerData, paymentData }: CustomerAnalysis
           </div>
         </CardContent>
       </Card>
-      <Card className="bg-card/70 border-white/10 shadow-lg duration-300 group">
+      <Card className="bg-card/70 border-border duration-300 group">
         <CardHeader>
-          <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">Payment Methods</CardTitle>
+          <CardTitle className="text-foreground group-hover:text-primary transition-colors">Payment Methods</CardTitle>
           <CardDescription>How your customers are paying.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -145,14 +145,16 @@ export function CustomerAnalysis({ customerData, paymentData }: CustomerAnalysis
                   let colorClass = '';
                     if (method.color.startsWith('#')) {
                         // Special handling for hex colors to generate background/text classes
-                        if (method.color === '#22d3ee') { // cyan
-                            colorClass = 'text-cyan-300 bg-cyan-500/20';
+                        if (method.color === 'hsl(var(--primary))') { // primary
+                            colorClass = 'text-primary bg-primary/20';
                         } else if (method.color === '#22c55e') { // green
                             colorClass = 'text-green-300 bg-green-500/20';
                         }
                     } else {
                         // Handling for HSL colors from theme
-                        if (method.method === 'online') {
+                        if (method.color.includes('var(--primary)')) {
+                            colorClass = 'text-primary bg-primary/20';
+                        } else if (method.method === 'online') {
                             colorClass = 'text-purple-300 bg-purple-500/20';
                         } else if (method.method === 'cod') {
                             colorClass = 'text-orange-300 bg-orange-500/20';

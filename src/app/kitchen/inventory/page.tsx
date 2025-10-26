@@ -86,12 +86,12 @@ export default function InventoryPage() {
       onIngredientAdded={handleIngredientAdded}
     >
         <Card 
-            className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+            className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
             onClick={() => setIsAddIngredientDialogOpen(true)}
         >
             <CardContent className="flex flex-row items-center justify-center text-center p-4">
-                <Plus className="h-6 w-6 text-white transition-colors" />
-                <p className="ml-2 text-sm font-semibold text-white transition-colors">Add Ingredient</p>
+                <Plus className="h-6 w-6 text-foreground transition-colors" />
+                <p className="ml-2 text-sm font-semibold text-foreground transition-colors">Add Ingredient</p>
             </CardContent>
         </Card>
     </AddIngredientDialog>
@@ -116,11 +116,11 @@ export default function InventoryPage() {
                     {inventory.map((item) => (
                         <Card 
                             key={item.id} 
-                            className="group bg-card/70 border-white/10 shadow-lg duration-300 cursor-pointer"
+                            className="group bg-card/70 border-border duration-300 cursor-pointer"
                             onClick={() => handleEditClick(item)}
                         >
                           <CardContent className="p-4 flex flex-col items-start">
-                            <p className="font-semibold text-lg text-white transition-colors">{item.name}</p>
+                            <p className="font-semibold text-lg text-foreground transition-colors">{item.name}</p>
                             <p className={cn("text-sm font-mono", item.lowStockWarning ? "text-destructive" : "text-green-400")}>
                                 {`${item.quantity} ${item.unit}`}
                             </p>

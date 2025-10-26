@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
-       <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+       <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 }

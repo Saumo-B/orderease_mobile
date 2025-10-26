@@ -25,7 +25,7 @@ export function SalesReportChart({ data }: SalesChartProps) {
   const chartConfig = {
     revenue: {
       label: 'Revenue',
-      color: '#22d3ee', // Cyan-400
+      color: 'hsl(var(--primary))',
     },
     orderCount: {
       label: 'Orders',
@@ -38,9 +38,9 @@ export function SalesReportChart({ data }: SalesChartProps) {
   };
 
   return (
-    <Card className="group bg-card/70 border-white/10 shadow-lg h-full duration-300">
+    <Card className="group bg-card/70 border-border h-full duration-300">
       <CardHeader>
-        <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">Revenue Trends</CardTitle>
+        <CardTitle className="text-foreground group-hover:text-primary transition-colors">Revenue Trends</CardTitle>
         <CardDescription>Revenue, orders, and average order value over time.</CardDescription>
       </CardHeader>
       <CardContent>

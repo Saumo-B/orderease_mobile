@@ -13,7 +13,7 @@ interface BranchListProps {
 
 export function BranchList({ branches, onEdit }: BranchListProps) {
   return (
-    <Card className="bg-card/70 border-white/10 shadow-lg">
+    <Card className="bg-card/70 border-border">
       <CardHeader>
         <CardTitle className="text-cyan-400">Your Branches</CardTitle>
       </CardHeader>
@@ -22,7 +22,7 @@ export function BranchList({ branches, onEdit }: BranchListProps) {
           {branches.map((branch) => (
             <div key={branch.id} className="flex items-center justify-between p-3 bg-background rounded-lg">
               <div>
-                <p className="font-semibold text-white">{branch.name}</p>
+                <p className="font-semibold text-foreground">{branch.name}</p>
                  <p className="text-sm text-muted-foreground mt-1">{branch.address}</p>
                 <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
                     <p className="flex items-center gap-2">
