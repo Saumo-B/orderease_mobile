@@ -31,7 +31,7 @@ const AlertDialogOverlay = React.forwardRef<
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName
 
 const alertDialogVariants = cva(
-  "fixed z-50 grid w-full gap-4 bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+  "fixed z-50 grid w-full gap-4 bg-background duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
   {
     variants: {
       variant: {
@@ -159,5 +159,3 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 }
-
-    

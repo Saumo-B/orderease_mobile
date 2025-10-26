@@ -52,7 +52,7 @@ export function OrderCharts({
 
   return (
     <div className="space-y-8 h-full">
-      <Card className="bg-card/70 border-white/10 shadow-lg">
+      <Card className="bg-card/70 border-border">
         <CardHeader>
           <CardTitle className="text-cyan-400">Order Status</CardTitle>
         </CardHeader>
@@ -102,7 +102,7 @@ export function OrderCharts({
         </CardContent>
       </Card>
 
-      <Card className="bg-card/70 border-white/10 shadow-lg">
+      <Card className="bg-card/70 border-border">
         <CardHeader>
           <CardTitle className="text-cyan-400">Top Selling Items</CardTitle>
         </CardHeader>

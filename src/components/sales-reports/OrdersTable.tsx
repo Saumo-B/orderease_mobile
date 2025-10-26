@@ -188,11 +188,11 @@ export function OrdersTable({ data }: OrdersTableProps) {
           className="max-w-sm bg-background"
         />
       </div>
-      <div className="rounded-md border border-white/10">
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-white/10">
+              <TableRow key={headerGroup.id} className="border-border">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id}>
@@ -214,7 +214,7 @@ export function OrdersTable({ data }: OrdersTableProps) {
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="border-white/10"
+                  className="border-border"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

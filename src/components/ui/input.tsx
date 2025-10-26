@@ -1,9 +1,27 @@
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, ...props }, ref) => {
+    if (type === 'color') {
+      return (
+        <input
+          type={type}
+          className={cn(
+            "p-0 border-none cursor-pointer",
+            "w-6 h-6 rounded-md",
+            "appearance-none bg-transparent",
+            "[&::-webkit-color-swatch-wrapper]:p-0",
+            "[&::-webkit-color-swatch]:rounded-md [&::-webkit-color-swatch]:border",
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+      )
+    }
     return (
       <input
         type={type}
@@ -20,3 +38,5 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
 Input.displayName = "Input"
 
 export { Input }
+
+    

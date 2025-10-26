@@ -186,11 +186,11 @@ export function EditMenuItemDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-4xl bg-card border-border flex flex-col h-full">
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Update Item</DialogTitle>
+          <DialogTitle className="text-primary">Update Item</DialogTitle>
         </DialogHeader>
         {dialogLoading ? (
           <div className="flex justify-center items-center flex-grow">
-            <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
           </div>
         ) : dialogError ? (
           <div className="flex flex-col justify-center items-center flex-grow text-destructive">
@@ -210,7 +210,7 @@ export function EditMenuItemDialog({
                       <Textarea placeholder="Description" {...register('description')} className="bg-background h-[182px]" />
                       <Input placeholder="Image URL" {...register('imageUrl', { required: true })} className="bg-background" />
                       <div className="flex items-center justify-between bg-background p-3 rounded-md">
-                        <Label htmlFor="manualOutOfStock" className={cn("text-white", isInventoryOutOfStock && "text-muted-foreground")}>Out of stock</Label>
+                        <Label htmlFor="manualOutOfStock" className={cn("text-foreground", isInventoryOutOfStock && "text-muted-foreground")}>Out of stock</Label>
                         <Switch
                             id="manualOutOfStock"
                             {...register('manualOutOfStock')}
@@ -241,7 +241,7 @@ export function EditMenuItemDialog({
                         </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-cyan-500/20 text-cyan-300 border-0")}>No, Go Back</AlertDialogCancel>
+                          <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-primary/20 text-primary border-0")}>No, Go Back</AlertDialogCancel>
                           <AlertDialogAction
                             className={cn(buttonVariants({ variant: 'destructive' }), "bg-destructive/20 text-destructive border-0")}
                             onClick={handleDelete}
@@ -253,7 +253,7 @@ export function EditMenuItemDialog({
                   </AlertDialog>
                   <Button
                       type="submit"
-                      className="w-full bg-cyan-500/20 text-cyan-300"
+                      className="w-full bg-primary/20 text-primary"
                       disabled={isSubmitting || dialogLoading || !!dialogError || !isDirty || !isFormValid}
                   >
                       {isSubmitting ? (
@@ -289,7 +289,7 @@ function RecipeArray({ control, ingredients }: { control: any; ingredients: Ingr
 
   return (
     <div className="h-full flex flex-col">
-      <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex-shrink-0">Recipe</h3>
+      <h3 className="text-lg font-semibold text-primary mb-4 flex-shrink-0">Recipe</h3>
       <ScrollArea className="flex-grow pr-4 -mr-4 no-scrollbar">
         <div className="space-y-2">
             {fields.map((field: any, index) => {
@@ -335,7 +335,7 @@ function RecipeArray({ control, ingredients }: { control: any; ingredients: Ingr
             <Button
                 type="button"
                 size="sm"
-                className="w-full bg-cyan-500/20 text-cyan-300"
+                className="w-full bg-primary/20 text-primary"
                 onClick={() => setIsAdding(true)}
             >
                 <Plus className="mr-2 h-4 w-4" />

@@ -83,7 +83,7 @@ export function OrderCard({ order }: OrderCardProps) {
   const CardComponent = (
     <Card
       className={cn(
-        'flex flex-col relative bg-card/70 border-white/10 shadow-lg',
+        'flex flex-col relative bg-card/70 border-border',
       )}
     >
       <CardHeader className="pb-2">
@@ -91,12 +91,12 @@ export function OrderCard({ order }: OrderCardProps) {
           <div className="flex-1">
             <div
               className={cn(
-                'font-headline text-2xl font-bold text-white/90'
+                'font-headline text-2xl font-bold text-foreground'
               )}
             >
               #{order.token}
             </div>
-            <div className="text-white/60 text-sm mt-1">
+            <div className="text-muted-foreground text-sm mt-1">
               <div>Name: {order.customerName}</div>
               <div>Phone: {phoneNumber10Digits}</div>
             </div>
@@ -112,12 +112,12 @@ export function OrderCard({ order }: OrderCardProps) {
            <div
             className={cn('flex-grow no-scrollbar')}
           >
-            <ul className="space-y-2 text-sm text-white/70">
+            <ul className="space-y-2 text-sm text-foreground/70">
               {order.items.map((item, index) => {
                  const isFullyServed = item.active === 0 && item.served;
                  const isPartiallyServed = item.active > 0 && item.served;
                 return (
-                  <li key={index} className={cn("flex flex-col", isFullyServed && "text-white/40")}>
+                  <li key={index} className={cn("flex flex-col", isFullyServed && "text-foreground/40")}>
                     <span>
                         {item.quantity}x {item.name}
                     </span>
@@ -146,7 +146,7 @@ export function OrderCard({ order }: OrderCardProps) {
                 </Badge>
               )}
             </div>
-            <div className="text-white/60 text-sm">{time}</div>
+            <div className="text-muted-foreground text-sm">{time}</div>
           </div>
         )}
       </CardContent>
@@ -157,13 +157,13 @@ export function OrderCard({ order }: OrderCardProps) {
             <Badge className="bg-green-500/20 text-green-300">
               Completed
             </Badge>
-            <div className="text-white/60 text-sm">{time}</div>
+            <div className="text-muted-foreground text-sm">{time}</div>
           </div>
         ) : (
           <>
             <Button
               size="sm"
-              className="w-full bg-cyan-500/20 text-cyan-300"
+              className="w-full bg-primary/20 text-primary"
               onClick={(e) => { e.stopPropagation(); handleMarkAsPaid(); }}
               disabled={order.status === 'paid' || isPaying}
             >
@@ -175,7 +175,7 @@ export function OrderCard({ order }: OrderCardProps) {
             </Button>
             <Button
               size="sm"
-              className="w-full bg-cyan-500/20 text-cyan-300"
+              className="w-full bg-primary/20 text-primary"
               onClick={(e) => { e.stopPropagation(); handleComplete(); }}
               disabled={order.served || isServing}
             >

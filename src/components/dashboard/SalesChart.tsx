@@ -50,11 +50,11 @@ export function SalesChart({ todayData, yesterdayData }: SalesChartProps) {
   const hasData = combinedData.some(d => d.today > 0 || d.yesterday > 0);
 
   const cardComponent = (
-     <Card className="bg-card/70 border-white/10 shadow-lg h-full group duration-300 cursor-pointer flex flex-col">
+     <Card className="bg-card/70 border-border h-full group duration-300 cursor-pointer flex flex-col">
         <CardHeader>
         <div className="flex justify-between items-center">
             <div>
-            <CardTitle className="text-white transition-colors">Live Sales Overview</CardTitle>
+            <CardTitle className="text-foreground transition-colors">Live Sales Overview</CardTitle>
             <CardDescription>Today vs. Yesterday</CardDescription>
             </div>
             <BarChart className="h-5 w-5 text-destructive" />
@@ -67,8 +67,8 @@ export function SalesChart({ todayData, yesterdayData }: SalesChartProps) {
                     <ComposedChart data={combinedData} margin={{ top: 5, right: 5, left: -10, bottom: -10 }}>
                         <defs>
                         <linearGradient id="colorTodayMini" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.5}/>
-                            <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                         </linearGradient>
                         </defs>
                         <XAxis
@@ -111,7 +111,7 @@ export function SalesChart({ todayData, yesterdayData }: SalesChartProps) {
         {cardComponent}
       </DialogTrigger>
       <DialogContent variant="full-screen" className="bg-background p-4 flex flex-col">
-         <DialogTitle className="text-xl font-bold text-center text-cyan-400 mb-4 sr-only">Live Sales Overview</DialogTitle>
+         <DialogTitle className="text-xl font-bold text-center text-primary mb-4 sr-only">Live Sales Overview</DialogTitle>
           <div className="flex-grow w-full h-full">
             <ChartContainer config={chartConfig} className="w-full h-full">
               <ComposedChart 
@@ -147,8 +147,8 @@ export function SalesChart({ todayData, yesterdayData }: SalesChartProps) {
                 />
                  <defs>
                    <linearGradient id="colorToday" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
                    </linearGradient>
                 </defs>
                 <Bar dataKey="today" fill="url(#colorToday)" radius={[4, 4, 0, 0]} />

@@ -19,7 +19,6 @@ export default function DashboardPage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showInventorySnapshot, setShowInventorySnapshot] = useState(true);
-  const { loading: ordersLoading } = useOrder();
 
   useEffect(() => {
     // Feature flag for inventory snapshot
@@ -46,8 +45,6 @@ export default function DashboardPage() {
         );
         const apiData = response.data;
         
-        // The backend now provides all necessary data, so we map it directly.
-        // But we calculate peak hour from the sales data.
         const peakHourData = apiData.salesTodayByHour.reduce(
           (max: { revenue: number, hour: string }, hourData: { revenue: number, hour: string }) => 
             hourData.revenue > max.revenue ? hourData : max, 
@@ -71,14 +68,8 @@ export default function DashboardPage() {
     fetchData();
   }, []);
   
-  const isLoading = statsLoading || ordersLoading;
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
-      </div>
-    );
+  if (statsLoading) {
+    return null; // The layout will show the main loader
   }
 
   if (error) {

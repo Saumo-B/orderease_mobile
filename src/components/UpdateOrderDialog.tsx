@@ -255,11 +255,11 @@ export function UpdateOrderDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-5xl bg-card border-border flex flex-col h-full">
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Update Order #{order.token}</DialogTitle>
+          <DialogTitle className="text-primary">Update Order #{order.token}</DialogTitle>
         </DialogHeader>
         {loadingMenu ? (
             <div className="flex justify-center items-center flex-grow">
-                <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
             </div>
         ) : menuError ? (
             <div className="flex flex-col justify-center items-center flex-grow text-destructive">
@@ -301,16 +301,16 @@ export function UpdateOrderDialog({
                                     </div>
                                     <div className="flex items-center justify-end w-[90px] h-8">
                                         {quantity === 0 ? (
-                                            <Button size="sm" className="bg-cyan-500/20 text-cyan-300 w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)} disabled={item.outOfStock}>
+                                            <Button size="sm" className="bg-primary/20 text-primary w-full h-8 py-1" onClick={() => updateItemQuantity(item, 1)} disabled={item.outOfStock}>
                                                 {item.outOfStock ? <Ban className="h-4 w-4" /> : <><Plus className="h-4 w-4 mr-1" /> Add</>}
                                             </Button>
                                         ) : (
                                             <div className="flex items-center gap-2">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity - 1)} disabled={isDecrementDisabled}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => updateItemQuantity(item, quantity - 1)} disabled={isDecrementDisabled}>
                                                     <Minus className="h-4 w-4" />
                                                 </Button>
                                                 <span className="font-bold text-center w-4">{quantity}</span>
-                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-cyan-500" onClick={() => updateItemQuantity(item, quantity + 1)}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => updateItemQuantity(item, quantity + 1)}>
                                                     <Plus className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -326,7 +326,7 @@ export function UpdateOrderDialog({
             </div>
 
             <div className="md:col-span-2 bg-background p-6 rounded-lg flex flex-col">
-                <h3 className="text-lg font-semibold text-cyan-400 mb-4">Order Summary</h3>
+                <h3 className="text-lg font-semibold text-primary mb-4">Order Summary</h3>
                 <ScrollArea className="flex-grow pr-4 -mr-4 no-scrollbar">
                 {currentItems.length > 0 ? (
                     <div className="space-y-2">
@@ -373,7 +373,7 @@ export function UpdateOrderDialog({
                 )}
                 </ScrollArea>
                 <div className="mt-auto pt-4">
-                  <Separator className="my-4 bg-white/10" />
+                  <Separator className="my-4 bg-border" />
                   <div className="flex justify-between items-center font-bold text-xl">
                       <span className="text-muted-foreground">New Total:</span>
                       <div className="font-mono text-green-400 flex justify-between w-28">
@@ -401,7 +401,7 @@ export function UpdateOrderDialog({
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-cyan-500/20 text-cyan-300 border-0")}>No, Go Back</AlertDialogCancel>
+                            <AlertDialogCancel className={cn(buttonVariants({ variant: 'outline' }), "bg-primary/20 text-primary border-0")}>No, Go Back</AlertDialogCancel>
                             <AlertDialogAction
                             className={cn(buttonVariants({ variant: 'destructive' }), "bg-destructive/20 text-destructive border-0")}
                             onClick={handleCancelOrder}
@@ -415,7 +415,7 @@ export function UpdateOrderDialog({
                     <Button
                         onClick={handleSubmit}
                         disabled={isSubmitDisabled}
-                        className="w-full bg-cyan-500/20 text-cyan-300"
+                        className="w-full bg-primary/20 text-primary"
                     >
                         {isSubmitting ? (
                           <Loader2 className="h-4 w-4 animate-spin" />

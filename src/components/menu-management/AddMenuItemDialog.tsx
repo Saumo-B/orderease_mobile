@@ -162,9 +162,12 @@ export function AddMenuItemDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-4xl bg-card border-border flex flex-col h-full">
+      <DialogContent 
+        className="sm:max-w-4xl bg-card border-border flex flex-col h-full"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Add Item</DialogTitle>
+          <DialogTitle className="text-primary">Add Item</DialogTitle>
         </DialogHeader>
         <ScrollArea className="flex-grow no-scrollbar">
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -188,7 +191,7 @@ export function AddMenuItemDialog({
                 <DialogFooter className="mt-6">
                   <Button
                       type="submit"
-                      className="bg-cyan-500/20 text-cyan-300 min-w-[100px]"
+                      className="bg-primary/20 text-primary min-w-[100px]"
                       disabled={isSubmitting || !isFormFilled}
                   >
                     {isSubmitting ? (
@@ -232,7 +235,7 @@ function RecipeArray({ control, ingredients }: { control: any; ingredients: Ingr
 
   return (
     <div className="h-full flex flex-col">
-      <h3 className="text-lg font-semibold text-cyan-400 mb-4 flex-shrink-0">Recipe</h3>
+      <h3 className="text-lg font-semibold text-primary mb-4 flex-shrink-0">Recipe</h3>
       <ScrollArea className="flex-grow pr-4 -mr-4 no-scrollbar">
         <div className="space-y-2">
             {fields.map((field: any, index) => {
@@ -274,7 +277,7 @@ function RecipeArray({ control, ingredients }: { control: any; ingredients: Ingr
             <Button
                 type="button"
                 size="sm"
-                className="w-full bg-cyan-500/20 text-cyan-300"
+                className="w-full bg-primary/20 text-primary"
                 onClick={() => setIsAdding(true)}
             >
                 <Plus className="mr-2 h-4 w-4" />

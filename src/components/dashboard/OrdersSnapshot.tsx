@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 
 
 const statusConfig: Record<string, { text: string; className: string }> = {
-    new: { text: 'New', className: 'bg-cyan-500/20 text-cyan-300' },
+    new: { text: 'New', className: 'bg-primary/20 text-primary' },
     paid: { text: 'In Progress', className: 'bg-yellow-500/20 text-yellow-300' },
     served: { text: 'In Progress', className: 'bg-yellow-500/20 text-yellow-300' },
 };
@@ -40,11 +40,11 @@ export function OrdersSnapshot() {
   };
 
   return (
-    <Card className="bg-card/70 border-white/10 shadow-lg h-full flex flex-col group transition-all duration-300">
+    <Card className="bg-card/70 border-border h-full flex flex-col group transition-all duration-300">
       <CardHeader className="pb-4">
         <div className="flex justify-between items-center">
           <div>
-            <CardTitle className="text-white">Live Order Queue</CardTitle>
+            <CardTitle className="text-foreground">Live Order Queue</CardTitle>
             <CardDescription>Most recent pending orders.</CardDescription>
           </div>
         </div>
@@ -60,7 +60,7 @@ export function OrdersSnapshot() {
                 return (
                     <div key={order.id} className="flex justify-between items-center bg-background/50 p-3 rounded-md">
                         <div>
-                            <p className="font-bold text-white">#{order.token}</p>
+                            <p className="font-bold text-foreground">#{order.token}</p>
                             <p className="text-xs text-muted-foreground">{order.items.length} items</p>
                         </div>
                         <Badge className={cn("capitalize", config.className)}>

@@ -55,15 +55,15 @@ export function SalesReportStatCards({ data }: StatCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {stats.map((stat) => (
-        <Card key={stat.title} className="bg-card/70 border-white/10 shadow-lg duration-300 group">
+        <Card key={stat.title} className="bg-card/70 border-border duration-300 group">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-white/70">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
               {stat.title}
             </CardTitle>
             <stat.icon className={`h-5 w-5 ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white transition-colors">{stat.value}</div>
+            <div className="text-3xl font-bold text-foreground transition-colors">{stat.value}</div>
              <p className="text-xs text-muted-foreground mt-1">
               For selected period
             </p>

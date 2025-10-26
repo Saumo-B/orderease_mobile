@@ -62,7 +62,7 @@ export function AddStaffDialog({ isOpen, setIsOpen, onStaffAdded }: AddStaffDial
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md bg-card border-border">
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Add Staff</DialogTitle>
+          <DialogTitle className="text-primary">Add Staff</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="py-4 space-y-4">
@@ -135,7 +135,7 @@ export function AddStaffDialog({ isOpen, setIsOpen, onStaffAdded }: AddStaffDial
           <DialogFooter className="mt-6">
             <Button
               type="submit"
-              className="bg-cyan-500/20 text-cyan-300 min-w-[150px]"
+              className="bg-primary/20 text-primary min-w-[150px]"
               disabled={!isValid || isSubmitting}
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Staff'}

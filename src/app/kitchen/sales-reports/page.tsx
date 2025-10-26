@@ -106,9 +106,9 @@ export default function SalesReportPage() {
             </div>
             
             <div className="md:col-span-3">
-                <Card className="group bg-card/70 border-white/10 shadow-lg duration-300">
+                <Card className="group bg-card/70 border-border duration-300">
                     <CardHeader>
-                        <CardTitle className="text-white group-hover:text-cyan-400 transition-colors">Detailed Order History</CardTitle>
+                        <CardTitle className="text-foreground group-hover:text-cyan-400 transition-colors">Detailed Order History</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <OrdersTable data={data.detailedOrders} />

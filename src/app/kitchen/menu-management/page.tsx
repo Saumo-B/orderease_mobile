@@ -67,8 +67,8 @@ function MenuItemImage({ src, alt, outOfStock }: { src: string; alt: string, out
         />
         {outOfStock && (
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-                <Ban className="h-8 w-8 text-white" />
-                <span className="font-bold text-white mt-2 text-sm">OUT OF STOCK</span>
+                <Ban className="h-8 w-8 text-foreground" />
+                <span className="font-bold text-foreground mt-2 text-sm">OUT OF STOCK</span>
             </div>
         )}
     </div>
@@ -173,12 +173,12 @@ export default function MenuManagementPage() {
       onMenuItemAdded={handleMenuItemAdded}
     >
       <Card
-        className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-white/10 shadow-lg border-2 border-dashed"
+        className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
         onClick={() => setIsAddMenuItemDialogOpen(true)}
       >
         <CardContent className="flex flex-row items-center justify-center p-4">
-          <Plus className="h-6 w-6 text-white transition-colors" />
-          <p className="ml-2 text-sm font-semibold text-white transition-colors">
+          <Plus className="h-6 w-6 text-foreground transition-colors" />
+          <p className="ml-2 text-sm font-semibold text-foreground transition-colors">
             Add Item
           </p>
         </CardContent>
@@ -216,7 +216,7 @@ export default function MenuManagementPage() {
                      <Card 
                           key={item.id} 
                           className={cn(
-                            "group bg-card/70 border-white/10 shadow-lg flex flex-col overflow-hidden duration-300",
+                            "group bg-card/70 border-border flex flex-col overflow-hidden duration-300",
                             "cursor-pointer"
                           )}
                           onClick={() => handleEditClick(item)}
@@ -229,7 +229,7 @@ export default function MenuManagementPage() {
                             />
                         </div>
                         <CardHeader className="p-3 pb-1 flex-grow">
-                            <CardTitle className="text-base text-white truncate transition-colors">{item.name}</CardTitle>
+                            <CardTitle className="text-base text-foreground truncate transition-colors">{item.name}</CardTitle>
                             <CardDescription className="text-xs text-muted-foreground mt-1 h-4 overflow-hidden line-clamp-1">{item.description}</CardDescription>
                             <p className="text-xs text-muted-foreground">{item.category}</p>
                         </CardHeader>

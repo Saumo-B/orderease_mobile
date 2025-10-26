@@ -101,9 +101,12 @@ export function AddIngredientDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent className="sm:max-w-md bg-card border-border">
+      <DialogContent 
+        className="sm:max-w-md bg-card border-border"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
-          <DialogTitle className="text-cyan-400">Add Ingredient</DialogTitle>
+          <DialogTitle className="text-primary">Add Ingredient</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="p-4">
@@ -197,7 +200,7 @@ export function AddIngredientDialog({
             <DialogFooter className="mt-4">
               <Button
                   type="submit"
-                  className="bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 min-w-[150px]"
+                  className="bg-primary/20 text-primary min-w-[150px]"
                   disabled={!isValid || isSubmitting}
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Ingredient'}

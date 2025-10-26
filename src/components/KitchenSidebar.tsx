@@ -133,7 +133,7 @@ export function KitchenSidebar() {
       <SheetTrigger asChild>
         <Button
           size="icon"
-          className="bg-cyan-500/20 text-cyan-300 p-2 rounded-lg"
+          className="bg-primary/20 text-primary p-2 rounded-lg"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -143,7 +143,7 @@ export function KitchenSidebar() {
         className="bg-card w-[270px] p-4 flex flex-col"
       >
         <SheetHeader>
-          <SheetTitle className="text-cyan-400 font-headline text-2xl text-center">
+          <SheetTitle className="text-primary font-headline text-2xl text-center">
             Main Menu
           </SheetTitle>
         </SheetHeader>
@@ -157,8 +157,8 @@ export function KitchenSidebar() {
                   variant="ghost"
                   asChild
                   className={cn(
-                    'justify-start text-base text-white/80',
-                    isActive && 'bg-cyan-500/20 text-cyan-300'
+                    'justify-start text-base text-foreground/80',
+                    isActive && 'bg-primary/20 text-primary'
                   )}
                 >
                   <Link href={item.href}>
@@ -170,15 +170,15 @@ export function KitchenSidebar() {
             })}
           </nav>
           <div className="mt-auto">
-            <Separator className="my-4 bg-white/10" />
+            <Separator className="my-4 bg-border/50" />
             <nav className="flex flex-col">
               {bottomMenuItems.map((item, index) => (
                 <Button
                   key={index}
                   variant="ghost"
                   className={cn(
-                    "justify-start text-base text-white/80",
-                     pathname === item.href && 'bg-cyan-500/20 text-cyan-300'
+                    "justify-start text-base text-foreground/80",
+                     pathname === item.href && 'bg-primary/20 text-primary'
                   )}
                   onClick={() => handleBottomMenuClick(item)}
                 >
