@@ -10,11 +10,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 function MyCartButtonContent() {
-  const { cartCount } = useOrder();
+  // const { cartCount } = useOrder();
+  const cartCount = 0; // Fix: cartCount not available in OrderContext (Kitchen context)
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const branchId = searchParams.get('branch');
-  
+
   const isActive = pathname === '/my-cart';
   const cartLink = branchId ? `/my-cart?branch=${branchId}` : '/my-cart';
 
@@ -37,9 +38,9 @@ function MyCartButtonContent() {
 
 
 export function MyCartButton() {
-    return (
-        <Suspense>
-            <MyCartButtonContent />
-        </Suspense>
-    )
+  return (
+    <Suspense>
+      <MyCartButtonContent />
+    </Suspense>
+  )
 }

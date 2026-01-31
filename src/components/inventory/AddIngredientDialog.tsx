@@ -75,17 +75,17 @@ export function AddIngredientDialog({
 
   const onSubmit = async (data: FormValues) => {
     try {
-        const branchId = getBranchId();
-        if (!branchId) {
-            throw new Error("Branch ID not found. Please log in again.");
-        }
-        const payload = {
-            ingredients: [{
-                ...data,
-                quantity: Number(data.quantity),
-                lowStockThreshold: Number(data.lowStockThreshold)
-            }]
-        };
+      const branchId = getBranchId();
+      if (!branchId) {
+        throw new Error("Branch ID not found. Please log in again.");
+      }
+      const payload = {
+        ingredients: [{
+          ...data,
+          quantity: Number(data.quantity),
+          lowStockThreshold: Number(data.lowStockThreshold)
+        }]
+      };
       await axiosInstance.post(
         `/api/ingredients?branch=${branchId}`,
         payload
@@ -101,7 +101,7 @@ export function AddIngredientDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent 
+      <DialogContent
         className="sm:max-w-md bg-card border-border"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
@@ -112,96 +112,97 @@ export function AddIngredientDialog({
           <div className="p-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                  <Input
-                      placeholder="Name"
-                      {...register(`name`, { required: true })}
-                      onChange={handleNameChange}
-                      className="bg-background"
-                  />
+                <Input
+                  placeholder="Name"
+                  {...register(`name`, { required: true })}
+                  onChange={handleNameChange}
+                  className="bg-background"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                      <Input
-                          type="number"
-                          placeholder="Quantity"
-                          {...register(`quantity`, { 
-                              required: true,
-                              valueAsNumber: true,
-                              min: { value: 0.01, message: "" }
-                          })}
-                          className="bg-background"
-                      />
-                  </div>
-                  <div className="space-y-2">
-                      <Controller
-                          control={control}
-                          name={`unit`}
-                          render={({ field }) => {
-                              const [open, setOpen] = useState(false);
-                              return (
-                              <Popover open={open} onOpenChange={setOpen}>
-                                  <PopoverTrigger asChild>
-                                      <Button
-                                      variant="outline"
-                                      role="combobox"
-                                      aria-expanded={open}
-                                      className="w-full justify-between bg-background hover:bg-background"
-                                      >
-                                      {field.value
-                                          ? units.find((unit) => unit.value === field.value)?.label
-                                          : "Select unit..."}
-                                      </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-[180px] p-0 bg-card border-border">
-                                      <Command>
-                                      <CommandList>
-                                          <CommandGroup>
-                                          {units.map((unit) => (
-                                              <CommandItem
-                                              key={unit.value}
-                                              value={unit.value}
-                                              onSelect={(currentValue) => {
-                                                  field.onChange(currentValue === field.value ? "" : currentValue)
-                                                  setOpen(false)
-                                              }}
-                                              >
-                                              <Check
-                                                  className={cn(
-                                                  "mr-2 h-4 w-4",
-                                                  field.value === unit.value ? "opacity-100" : "opacity-0"
-                                                  )}
-                                              />
-                                              {unit.label}
-                                              </CommandItem>
-                                          ))}
-                                          </CommandGroup>
-                                      </CommandList>
-                                      </Command>
-                                  </PopoverContent>
-                              </Popover>
-                          )}}
-                      />
-                  </div>
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    placeholder="Quantity"
+                    {...register(`quantity`, {
+                      required: true,
+                      valueAsNumber: true,
+                      min: { value: 0.01, message: "" }
+                    })}
+                    className="bg-background"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Controller
+                    control={control}
+                    name={`unit`}
+                    render={({ field }) => {
+                      const [open, setOpen] = useState(false);
+                      return (
+                        <Popover open={open} onOpenChange={setOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              aria-expanded={open}
+                              className="w-full justify-between bg-background hover:bg-background"
+                            >
+                              {field.value
+                                ? units.find((unit) => unit.value === field.value)?.label
+                                : "Select unit..."}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[180px] p-0 bg-card border-border">
+                            <Command>
+                              <CommandList>
+                                <CommandGroup>
+                                  {units.map((unit) => (
+                                    <CommandItem
+                                      key={unit.value}
+                                      value={unit.value}
+                                      onSelect={(currentValue) => {
+                                        field.onChange(currentValue === field.value ? "" : currentValue)
+                                        setOpen(false)
+                                      }}
+                                    >
+                                      <Check
+                                        className={cn(
+                                          "mr-2 h-4 w-4",
+                                          field.value === unit.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                      />
+                                      {unit.label}
+                                    </CommandItem>
+                                  ))}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      )
+                    }}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                  <Input
-                      type="number"
-                      placeholder="Low Stock Threshold"
-                      {...register(`lowStockThreshold`, { 
-                          required: true,
-                          valueAsNumber: true,
-                          min: { value: 0, message: "" }
-                      })}
-                      className="bg-background"
-                  />
+                <Input
+                  type="number"
+                  placeholder="Low Stock Threshold"
+                  {...register(`lowStockThreshold`, {
+                    required: true,
+                    valueAsNumber: true,
+                    min: { value: 0, message: "" }
+                  })}
+                  className="bg-background"
+                />
               </div>
             </div>
 
             <DialogFooter className="mt-4">
               <Button
-                  type="submit"
-                  className="bg-primary/20 text-primary min-w-[150px]"
-                  disabled={!isValid || isSubmitting}
+                type="submit"
+                className="bg-primary/20 text-primary min-w-[150px]"
+                disabled={!isValid || isSubmitting}
               >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Add Ingredient'}
               </Button>

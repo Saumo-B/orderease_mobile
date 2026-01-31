@@ -1,8 +1,8 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
-import type { Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput, Branch } from '@/lib/types';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useMemo } from 'react';
+import type { Order, FullMenuItem, AddStaffInput, AddBranchInput, UpdateBranchInput, Branch, Ingredient, StaffMember } from '@/lib/types';
 import { axiosInstance } from '@/lib/axios-instance';
 import { usePathname } from 'next/navigation';
 import { getBranchId } from '@/lib/utils';
@@ -12,6 +12,15 @@ interface OrderContextType {
   error: string | null;
   fetchKitchenOrders: () => Promise<void>;
   setKitchenOrders: React.Dispatch<React.SetStateAction<Order[]>>;
+
+  // Global Data State
+  menuItems: FullMenuItem[];
+  ingredients: Ingredient[];
+  staff: StaffMember[];
+  fetchMenuItems: (branchId: string) => Promise<void>;
+  fetchIngredients: (branchId: string) => Promise<void>;
+  fetchStaff: (branchId: string) => Promise<void>;
+
   markAsPaid: (id: string) => Promise<boolean>;
   completeOrder: (id: string) => Promise<boolean>;
   cancelOrder: (id: string) => Promise<boolean>;
@@ -30,15 +39,19 @@ interface OrderContextType {
   setIsAddStaffDialogOpen: (isOpen: boolean) => void;
   isAddBranchDialogOpen: boolean;
   setIsAddBranchDialogOpen: (isOpen: boolean) => void;
-  
+
   // New state for centralized loading
   isPageLoading: boolean;
+  setIsPageLoading: (isLoading: boolean) => void;
   branchLoading: boolean;
 
   // New state for branch management
   currentBranch: { id: string; name: string } | null;
   allBranches: Branch[];
   handleBranchSelect: (branch: Branch) => void;
+  // Cache for menu items to prevent redundant fetches
+  menuItemsCache: Record<string, FullMenuItem[]>;
+  setMenuItemsCache: React.Dispatch<React.SetStateAction<Record<string, FullMenuItem[]>>>;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
@@ -59,7 +72,7 @@ const mapBackendOrderToFrontend = (order: any): Order => {
       const servedQty = item.status?.served ?? item.served ?? 0;
       const quantity = activeQty + servedQty;
       const isServed = servedQty > 0;
-      
+
       return {
         id: item._id || item.menuItem?._id || item.name || 'unknown-id',
         name: item.name || item.menuItem?.name || item.sku || 'Unknown Item',
@@ -90,13 +103,90 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [branchLoading, setBranchLoading] = useState(true);
   const [currentBranch, setCurrentBranch] = useState<{ id: string; name: string } | null>(null);
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
+  const [menuItemsCache, setMenuItemsCache] = useState<Record<string, FullMenuItem[]>>({});
+
+  // Internal state for global data
+  const [menuItems, setMenuItems] = useState<FullMenuItem[]>([]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+
+  const fetchMenuItems = useCallback(async (branchId: string) => {
+    try {
+      // Check if we have it in cache first to avoid flicker if already loaded
+      if (menuItemsCache[branchId]) {
+        setMenuItems(menuItemsCache[branchId]);
+        return;
+      }
+
+      const response = await axiosInstance.get(`/api/menu?branch=${branchId}`);
+      if (response.data && Array.isArray(response.data)) {
+        const formatted: FullMenuItem[] = response.data.map((item: any) => {
+          let imageUrl = item.imageUrl || '';
+          if (imageUrl && !imageUrl.startsWith('http')) {
+            imageUrl = `https://cdn.pixabay.com/photo/${imageUrl}.jpg`;
+          }
+          return {
+            id: item._id,
+            name: item.name,
+            price: item.price,
+            category: item.category,
+            description: item.description,
+            imageUrl: imageUrl,
+            recipe: item.recipe,
+            outOfStock: item.outOfStock,
+            manualOutOfStock: item.manualOutOfStock,
+          };
+        });
+        setMenuItems(formatted);
+        setMenuItemsCache(prev => ({ ...prev, [branchId]: formatted }));
+      }
+    } catch (e) {
+      console.error("Failed to fetch menu items", e);
+    }
+  }, [menuItemsCache]);
+
+  const fetchIngredients = useCallback(async (branchId: string) => {
+    try {
+      const response = await axiosInstance.get(`/api/ingredients?branch=${branchId}`);
+      if (response.data && Array.isArray(response.data)) {
+        const formatted: Ingredient[] = response.data.map((item: any) => ({
+          id: item._id,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          lowStockWarning: item.lowStockWarning,
+          lowStockThreshold: item.lowStockThreshold,
+        }));
+        setIngredients(formatted.sort((a, b) => a.name.localeCompare(b.name)));
+      }
+    } catch (e) {
+      console.error("Failed to fetch ingredients", e);
+    }
+  }, []);
+
+  const fetchStaff = useCallback(async (branchId: string) => {
+    try {
+      const response = await axiosInstance.get(`/api/profiles?branch=${branchId}`);
+      if (response.data && Array.isArray(response.data.staff)) {
+        const formatted: StaffMember[] = response.data.staff.map((item: any) => ({
+          id: item._id,
+          name: item.name,
+          email: item.email,
+          role: item.role,
+        }));
+        setStaff(formatted);
+      }
+    } catch (e) {
+      console.error("Failed to fetch staff", e);
+    }
+  }, []);
 
   const fetchBranchData = useCallback(async () => {
-    setBranchLoading(true);
+    // setBranchLoading(true); // Optimization: Don't block UI on refetch
     try {
       const storedUserProfile = localStorage.getItem('userProfile');
       const currentUserProfile = storedUserProfile ? JSON.parse(storedUserProfile) : null;
-      
+
       const storedStaticProfile = localStorage.getItem('staticUserProfile');
       const staticProfile = storedStaticProfile ? JSON.parse(storedStaticProfile) : null;
 
@@ -118,18 +208,18 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
             phone: item.phone,
             address: item.address,
           }));
-          const sortedBranches = formattedBranches.sort((a,b) => a.name.localeCompare(b.name));
+          const sortedBranches = formattedBranches.sort((a, b) => a.name.localeCompare(b.name));
           const branchesToShow = sortedBranches.filter(b => b.name !== 'All');
           setAllBranches(branchesToShow);
 
           if (currentUserProfile.branchName === 'All' && branchesToShow.length > 0) {
-              const defaultBranch = branchesToShow[0];
-              handleBranchSelect(defaultBranch, false); // Don't reload page
+            const defaultBranch = branchesToShow[0];
+            handleBranchSelect(defaultBranch, false); // Don't reload page
           }
         }
       } else {
         // User has a specific branch, only show that
-        setAllBranches([{ id: staticProfile.branchid, name: staticProfile.branchName, pin: '', phone: '', address: ''}]);
+        setAllBranches([{ id: staticProfile.branchid, name: staticProfile.branchName, pin: '', phone: '', address: '' }]);
       }
     } catch (e) {
       console.error("Failed to fetch branches", e);
@@ -140,32 +230,32 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   const handleBranchSelect = (branch: Branch, reload = true) => {
     try {
-        const storedProfile = localStorage.getItem('userProfile');
-        const profile = storedProfile ? JSON.parse(storedProfile) : {};
-        
-        const newProfile = {
-            ...profile,
-            branchid: branch.id,
-            branchName: branch.name,
-        };
+      const storedProfile = localStorage.getItem('userProfile');
+      const profile = storedProfile ? JSON.parse(storedProfile) : {};
 
-        localStorage.setItem('userProfile', JSON.stringify(newProfile));
-        setCurrentBranch({ id: branch.id, name: branch.name });
+      const newProfile = {
+        ...profile,
+        branchid: branch.id,
+        branchName: branch.name,
+      };
 
-        if (reload) {
-          window.location.reload();
-        }
-    } catch(e) {
-        console.error("Failed to update branch selection", e);
+      localStorage.setItem('userProfile', JSON.stringify(newProfile));
+      setCurrentBranch({ id: branch.id, name: branch.name });
+
+      if (reload) {
+        window.location.reload();
+      }
+    } catch (e) {
+      console.error("Failed to update branch selection", e);
     }
   };
 
   const fetchKitchenOrders = useCallback(async () => {
-    setIsPageLoading(true);
+    // We do not set isPageLoading(true) here to allow for background updates without skeletons
     try {
       setError(null);
       const branchId = getBranchId();
-      if (!branchId || branchId === '68d6fda5bab89f8afc545cee') { 
+      if (!branchId || branchId === '68d6fda5bab89f8afc545cee') {
         setKitchenOrders([]);
         return;
       }
@@ -178,11 +268,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error('Error fetching kitchen orders:', err);
       setError('Could not fetch kitchen orders. Please try again later.');
-    } finally {
-      setIsPageLoading(false);
     }
   }, []);
-  
+
   useEffect(() => {
     const isAuthPage = pathname === '/kitchen/login' || pathname === '/kitchen/register' || pathname === '/';
     if (isAuthPage) {
@@ -190,17 +278,40 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       setBranchLoading(false);
       return;
     }
-    
+
     async function loadInitialData() {
-      await fetchBranchData();
-      await fetchKitchenOrders();
+      setIsPageLoading(true);
+      setBranchLoading(true);
+
+      try {
+        // Ensure branch data and local storage are synchronized first
+        await fetchBranchData();
+
+        const branchId = getBranchId();
+        const promises: Promise<void>[] = [fetchKitchenOrders()];
+
+        if (branchId && branchId !== '68d6fda5bab89f8afc545cee') {
+          promises.push(fetchMenuItems(branchId));
+          promises.push(fetchIngredients(branchId));
+          promises.push(fetchStaff(branchId));
+        }
+
+        await Promise.all(promises);
+      } catch (err) {
+        console.error("Error loading initial data:", err);
+      } finally {
+        setIsPageLoading(false);
+        setBranchLoading(false);
+      }
     }
 
     loadInitialData();
 
-  }, [pathname, fetchBranchData, fetchKitchenOrders]);
+  }, [pathname, fetchBranchData, fetchKitchenOrders, fetchMenuItems, fetchIngredients, fetchStaff]);
 
- const completeOrder = async (id: string): Promise<boolean> => {
+
+
+  const completeOrder = useCallback(async (id: string): Promise<boolean> => {
     try {
       const res = await axiosInstance.patch(
         `/api/kitchen/status/${id}`,
@@ -208,14 +319,12 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       );
 
       if (res.status === 200 && res.data.order) {
+        // ... (logic remains same)
         const updatedOrder = mapBackendOrderToFrontend(res.data.order);
-        
-        const updateState = (prevOrders: Order[]) => 
-            prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o)
-                      .sort((a, b) => b.timestamp - a.timestamp);
-
-        setKitchenOrders(updateState);
-        
+        setKitchenOrders(prevOrders =>
+          prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o)
+            .sort((a, b) => b.timestamp - a.timestamp)
+        );
         return true;
       } else {
         throw new Error('Backend update failed');
@@ -224,9 +333,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to complete order ${id}:`, error);
       return false;
     }
-  };
+  }, []);
 
-  const markAsPaid = async (id: string): Promise<boolean> => {
+  const markAsPaid = useCallback(async (id: string): Promise<boolean> => {
     try {
       const res = await axiosInstance.patch(
         `/api/kitchen/status/${id}`,
@@ -235,13 +344,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
       if (res.status === 200 && res.data.order) {
         const updatedOrder = mapBackendOrderToFrontend(res.data.order);
-        
-        const updateState = (prevOrders: Order[]) => 
-            prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o)
-                      .sort((a,b) => b.timestamp - a.timestamp);
-
-        setKitchenOrders(updateState);
-        
+        setKitchenOrders(prevOrders =>
+          prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o)
+            .sort((a, b) => b.timestamp - a.timestamp)
+        );
         return true;
       } else {
         throw new Error('Backend update failed');
@@ -250,11 +356,11 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to mark order ${id} as paid:`, error);
       return false;
     }
-  };
-  
-  const updateOrderItems = async (orderId: string, customer: { name: string, phone: string }, items: { menuItem: string, qty: number, price: number, served: boolean, initialQty: number }[]): Promise<boolean> => {
+  }, []);
+
+  const updateOrderItems = useCallback(async (orderId: string, customer: { name: string, phone: string }, items: { menuItem: string, qty: number, price: number, served: boolean, initialQty: number }[]): Promise<boolean> => {
     try {
-       const itemsPayload = items.map(item => {
+      const itemsPayload = items.map(item => {
         const servedQty = item.served ? item.initialQty : 0;
         const activeQty = item.qty - servedQty;
         return {
@@ -271,7 +377,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         items: itemsPayload,
         customer,
       };
-      
+
       const res = await axiosInstance.patch(
         `/api/orders/${orderId}`,
         payload
@@ -287,20 +393,18 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to update order ${orderId}:`, error);
       return false;
     }
-  };
+  }, [fetchKitchenOrders]);
 
-  const cancelOrder = async (orderId: string): Promise<boolean> => {
+  const cancelOrder = useCallback(async (orderId: string): Promise<boolean> => {
     try {
       const res = await axiosInstance.delete(
         `/api/orders/${orderId}`
       );
 
       if (res.status === 200) {
-        const filterOutOrder = (prevOrders: Order[]) => 
-          prevOrders.filter((order) => order.id !== orderId);
-
-        setKitchenOrders(filterOutOrder);
-        
+        setKitchenOrders(prevOrders =>
+          prevOrders.filter((order) => order.id !== orderId)
+        );
         return true;
       } else {
         throw new Error('Backend returned an error');
@@ -309,30 +413,30 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to cancel order ${orderId}:`, error);
       return false;
     }
-  };
+  }, []);
 
-  const deleteIngredient = async (ingredientId: string): Promise<boolean> => {
+  const deleteIngredient = useCallback(async (ingredientId: string): Promise<boolean> => {
     try {
       const branchId = getBranchId();
       if (!branchId) {
         throw new Error("Branch ID not found. Please log in again.");
       }
       const response = await axiosInstance.delete(`/api/ingredients/${ingredientId}?branch=${branchId}`);
-       if (response.status === 409) {
-          return false;
-       }
+      if (response.status === 409) {
+        return false;
+      }
       return true;
     } catch (error: any) {
-        if(error.response && error.response.status === 409) {
-            console.error(`Ingredient ${ingredientId} is in use.`);
-            return false;
-        }
+      if (error.response && error.response.status === 409) {
+        console.error(`Ingredient ${ingredientId} is in use.`);
+        return false;
+      }
       console.error(`Failed to delete ingredient ${ingredientId}:`, error);
       return false;
     }
-  };
+  }, []);
 
-  const updateMenuItem = async (menuId: string, data: Partial<FullMenuItem>): Promise<boolean> => {
+  const updateMenuItem = useCallback(async (menuId: string, data: Partial<FullMenuItem>): Promise<boolean> => {
     try {
       await axiosInstance.patch(`/api/menu/${menuId}`, data);
       return true;
@@ -340,9 +444,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to update menu item ${menuId}:`, error);
       return false;
     }
-  };
+  }, []);
 
-  const deleteMenuItem = async (menuId: string): Promise<boolean> => {
+  const deleteMenuItem = useCallback(async (menuId: string): Promise<boolean> => {
     try {
       await axiosInstance.delete(`/api/menu/${menuId}`);
       return true;
@@ -350,9 +454,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Failed to delete menu item ${menuId}:`, error);
       return false;
     }
-  };
+  }, []);
 
-  const addStaffMember = async (staffData: AddStaffInput): Promise<boolean> => {
+  const addStaffMember = useCallback(async (staffData: AddStaffInput): Promise<boolean> => {
     try {
       const branchId = getBranchId();
       if (!branchId) {
@@ -364,61 +468,99 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
       console.error('Failed to add staff member:', error);
       return false;
     }
-  };
-  
-  const addBranch = async (branchData: AddBranchInput): Promise<boolean> => {
-    try {
-        await axiosInstance.post('/api/branch', branchData);
-        return true;
-    } catch(error) {
-        console.error('Failed to add branch:', error);
-        return false;
-    }
-  };
-  
-  const updateBranch = async (branchId: string, branchData: UpdateBranchInput): Promise<boolean> => {
-     try {
-        await axiosInstance.put(`/api/branch/${branchId}`, branchData);
-        return true;
-    } catch(error) {
-        console.error(`Failed to update branch ${branchId}:`, error);
-        return false;
-    }
-  };
+  }, []);
 
+  const addBranch = useCallback(async (branchData: AddBranchInput): Promise<boolean> => {
+    try {
+      await axiosInstance.post('/api/branch', branchData);
+      return true;
+    } catch (error) {
+      console.error('Failed to add branch:', error);
+      return false;
+    }
+  }, []);
+
+  const updateBranch = useCallback(async (branchId: string, branchData: UpdateBranchInput): Promise<boolean> => {
+    try {
+      await axiosInstance.put(`/api/branch/${branchId}`, branchData);
+      return true;
+    } catch (error) {
+      console.error(`Failed to update branch ${branchId}:`, error);
+      return false;
+    }
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    kitchenOrders,
+    error,
+    setKitchenOrders,
+    fetchKitchenOrders,
+    menuItems,
+    ingredients,
+    staff,
+    fetchMenuItems,
+    fetchIngredients,
+    fetchStaff,
+    completeOrder,
+    markAsPaid,
+    cancelOrder,
+    updateOrderItems,
+    deleteIngredient,
+    updateMenuItem,
+    deleteMenuItem,
+    addStaffMember,
+    addBranch,
+    updateBranch,
+    isAddMenuItemDialogOpen,
+    setIsAddMenuItemDialogOpen,
+    isAddIngredientDialogOpen,
+    setIsAddIngredientDialogOpen,
+    isAddStaffDialogOpen,
+    setIsAddStaffDialogOpen,
+    isAddBranchDialogOpen,
+    setIsAddBranchDialogOpen,
+    isPageLoading,
+    setIsPageLoading,
+    branchLoading,
+    currentBranch,
+    allBranches,
+    handleBranchSelect,
+    menuItemsCache,
+    setMenuItemsCache,
+  }), [
+    kitchenOrders,
+    error,
+    menuItems,
+    ingredients,
+    staff,
+    fetchKitchenOrders,
+    fetchMenuItems,
+    fetchIngredients,
+    fetchStaff,
+    completeOrder,
+    markAsPaid,
+    cancelOrder,
+    updateOrderItems,
+    deleteIngredient,
+    updateMenuItem,
+    deleteMenuItem,
+    addStaffMember,
+    addBranch,
+    updateBranch,
+    isAddMenuItemDialogOpen,
+    isAddIngredientDialogOpen,
+    isAddStaffDialogOpen,
+    isAddBranchDialogOpen,
+    isPageLoading,
+    branchLoading,
+    currentBranch,
+    allBranches,
+    handleBranchSelect,
+    menuItemsCache // State setters like setIs... are stable and don't need to be in deps but can be
+  ]);
 
   return (
-    <OrderContext.Provider
-      value={{
-        kitchenOrders,
-        error,
-        setKitchenOrders,
-        fetchKitchenOrders,
-        completeOrder,
-        markAsPaid,
-        cancelOrder,
-        updateOrderItems,
-        deleteIngredient,
-        updateMenuItem,
-        deleteMenuItem,
-        addStaffMember,
-        addBranch,
-        updateBranch,
-        isAddMenuItemDialogOpen,
-        setIsAddMenuItemDialogOpen,
-        isAddIngredientDialogOpen,
-        setIsAddIngredientDialogOpen,
-        isAddStaffDialogOpen,
-        setIsAddStaffDialogOpen,
-        isAddBranchDialogOpen,
-        setIsAddBranchDialogOpen,
-        isPageLoading,
-        branchLoading,
-        currentBranch,
-        allBranches,
-        handleBranchSelect,
-      }}
-    >
+    <OrderContext.Provider value={contextValue}>
       {children}
     </OrderContext.Provider>
   );

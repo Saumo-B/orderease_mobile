@@ -29,127 +29,127 @@ import { cn } from '@/lib/utils';
 import { ArrowUpDown } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
-    new: 'bg-blue-500/20 text-blue-300',
-    paid: 'bg-yellow-500/20 text-yellow-300',
-    served: 'bg-purple-500/20 text-purple-300',
-    done: 'bg-green-500/20 text-green-300'
+  new: 'bg-zinc-500/20 text-zinc-300 border border-zinc-500/30',
+  paid: 'bg-zinc-500/40 text-white border border-zinc-500/50',
+  served: 'bg-primary/10 text-primary border border-primary/20',
+  done: 'bg-primary/20 text-primary border border-primary/30'
 }
 
 const statusDisplayMap: Record<string, string> = {
-    done: 'Completed',
-    paid: 'In Progress',
-    new: 'New',
-    served: 'Served',
+  done: 'Completed',
+  paid: 'In Progress',
+  new: 'New',
+  served: 'Served',
 };
 
 
 const columns: ColumnDef<SalesReportOrder>[] = [
-    {
-        accessorKey: 'token',
-        header: ({ column }) => {
-          return (
-            <div className="flex items-center">
-                <span>Order ID</span>
-                <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="ml-2 px-1"
-                >
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            </div>
-          )
-        },
-        cell: ({ row }) => <div className="font-mono">#{row.original.token}</div>,
+  {
+    accessorKey: 'token',
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center">
+          <span>Order ID</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="ml-2 px-1"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )
     },
-    {
-        accessorKey: 'date',
-        header: ({ column }) => {
-          return (
-             <div className="flex items-center">
-                <span>Date</span>
-                <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="ml-2 px-1"
-                >
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            </div>
-          )
-        },
-        cell: ({ row }) => new Date(row.original.date).toLocaleString(),
+    cell: ({ row }) => <div className="font-mono">#{row.original.token}</div>,
+  },
+  {
+    accessorKey: 'date',
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center">
+          <span>Date</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="ml-2 px-1"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )
     },
-    {
-        accessorKey: 'customerName',
-        header: ({ column }) => {
-          return (
-            <div className="flex items-center">
-                <span>Customer</span>
-                <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="ml-2 px-1"
-                >
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            </div>
-          )
-        },
+    cell: ({ row }) => new Date(row.original.date).toLocaleString(),
+  },
+  {
+    accessorKey: 'customerName',
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center">
+          <span>Customer</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="ml-2 px-1"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )
     },
-    {
-        accessorKey: 'status',
-        header: ({ column }) => {
-          return (
-            <div className="flex items-center">
-                <span>Status</span>
-                <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                className="ml-2 px-1"
-                >
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            </div>
-          )
-        },
-        cell: ({ row }) => {
-          const status = row.original.status;
-          return (
-            <Badge className={cn("font-bold", statusColors[status] || 'bg-gray-500')}>
-                {statusDisplayMap[status] || status}
-            </Badge>
-          )
-        },
+  },
+  {
+    accessorKey: 'status',
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center">
+          <span>Status</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="ml-2 px-1"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )
     },
-    {
-        accessorKey: 'total',
-        header: ({ column }) => {
-          return (
-            <div className="flex items-center justify-end">
-                <span>Amount</span>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                    className="px-1"
-                >
-                    <ArrowUpDown className="h-4 w-4" />
-                </Button>
-            </div>
-          )
-        },
-        cell: ({ row }) => {
-          const amount = parseFloat(row.getValue('total'))
-          const formatted = `INR ${new Intl.NumberFormat('en-IN').format(amount)}`
-     
-          return <div className="text-right font-medium">{formatted}</div>
-        },
+    cell: ({ row }) => {
+      const status = row.original.status;
+      return (
+        <Badge className={cn("font-bold", statusColors[status] || 'bg-gray-500')}>
+          {statusDisplayMap[status] || status}
+        </Badge>
+      )
     },
+  },
+  {
+    accessorKey: 'total',
+    header: ({ column }) => {
+      return (
+        <div className="flex items-center justify-end">
+          <span>Amount</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="px-1"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
+        </div>
+      )
+    },
+    cell: ({ row }) => {
+      const amount = parseFloat(row.getValue('total'))
+      const formatted = `INR ${new Intl.NumberFormat('en-IN').format(amount)}`
+
+      return <div className="text-right font-medium">{formatted}</div>
+    },
+  },
 ];
 
 interface OrdersTableProps {
@@ -178,7 +178,7 @@ export function OrdersTable({ data }: OrdersTableProps) {
 
   return (
     <div className="w-full">
-       <div className="flex items-center py-4">
+      <div className="flex items-center py-4">
         <Input
           placeholder="Filter by customer..."
           value={(table.getColumn("customerName")?.getFilterValue() as string) ?? ""}
@@ -199,9 +199,9 @@ export function OrdersTable({ data }: OrdersTableProps) {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}

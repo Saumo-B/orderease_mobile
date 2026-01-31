@@ -47,15 +47,15 @@ export function AddBranchDialog({ isOpen, setIsOpen, onBranchAdded }: AddBranchD
       reset();
     }
   };
-  
+
   const handleNumericInputChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: 'PIN' | 'phone') => {
     const value = e.target.value;
     const maxLength = fieldName === 'PIN' ? 6 : 10;
     if (/^\d*$/.test(value) && value.length <= maxLength) {
-        setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
+      setValue(fieldName, value, { shouldValidate: true, shouldDirty: true });
     }
   };
-  
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     if (/^[a-zA-Z\s]*$/.test(value)) {
@@ -79,20 +79,20 @@ export function AddBranchDialog({ isOpen, setIsOpen, onBranchAdded }: AddBranchD
             />
             <Input
               placeholder="PIN Code"
-              {...register('PIN', { 
-                  required: true,
-                  minLength: { value: 6, message: 'PIN must be 6 digits' },
-                  maxLength: { value: 6, message: 'PIN must be 6 digits' },
-                })}
+              {...register('PIN', {
+                required: true,
+                minLength: { value: 6, message: 'PIN must be 6 digits' },
+                maxLength: { value: 6, message: 'PIN must be 6 digits' },
+              })}
               onChange={(e) => handleNumericInputChange(e, 'PIN')}
               className="bg-background"
             />
             <Input
               placeholder="Branch Phone"
-              {...register('phone', { 
-                  required: true,
-                  minLength: { value: 10, message: 'Phone must be 10 digits' },
-                  maxLength: { value: 10, message: 'Phone must be 10 digits' },
+              {...register('phone', {
+                required: true,
+                minLength: { value: 10, message: 'Phone must be 10 digits' },
+                maxLength: { value: 10, message: 'Phone must be 10 digits' },
               })}
               onChange={(e) => handleNumericInputChange(e, 'phone')}
               className="bg-background"

@@ -2,6 +2,8 @@
 'use client';
 
 import { KitchenHeader } from '@/components/KitchenHeader';
+import { KitchenSidebar } from '@/components/KitchenSidebar';
+import { BranchSwitcher } from '@/components/BranchSwitcher';
 import { usePathname } from 'next/navigation';
 import { KitchenBottomNav } from '@/components/KitchenBottomNav';
 import { cn } from '@/lib/utils';
@@ -30,29 +32,36 @@ export default function KitchenLayout({
   const showHeader =
     pathname !== '/kitchen/login' && pathname !== '/kitchen/register';
 
+
+
   if (showLoader) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center bg-background"
-      >
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground animate-pulse">Loading kitchen...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {showHeader && <KitchenHeader />}
-      <main className={cn('pb-24 no-scrollbar')}>
-        {showHeader ? (
-          <div className="max-w-4xl mx-auto">
-            <div className="px-4 py-8">{children}</div>
-          </div>
-        ) : (
-          children
-        )}
-      </main>
-      {showHeader && <KitchenBottomNav />}
+    <div className="min-h-screen bg-background text-foreground flex">
+      {showHeader && <KitchenSidebar />}
+
+      <div className={cn("flex-grow flex flex-col min-h-screen transition-all duration-300", showHeader && "md:pl-20 lg:pl-[240px]")}>
+        {showHeader && <div className="md:hidden"><KitchenHeader /></div>}
+        {showHeader && <div className="hidden md:block sticky top-0 bg-background/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between z-30">
+          <h1 className="text-2xl font-bold font-headline text-gradient">Kitchen Dashboard</h1>
+          <BranchSwitcher />
+        </div>}
+
+        <main className={cn('pb-24 md:pb-8 flex-grow overflow-x-hidden no-scrollbar', showHeader && "px-4 py-8 md:px-8")}>
+          {children}
+        </main>
+      </div>
+
+      {showHeader && <div className="md:hidden"><KitchenBottomNav /></div>}
     </div>
   );
 }

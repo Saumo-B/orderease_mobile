@@ -1,4 +1,4 @@
-import type {Config} from 'tailwindcss';
+import type { Config } from 'tailwindcss';
 
 export default {
   darkMode: ['class'],
@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"PT Sans"', 'sans-serif'],
-        headline: ['"PT Sans"', 'sans-serif'],
+        body: ['"Inter"', 'sans-serif'],
+        headline: ['"Inter"', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -88,14 +88,19 @@ export default {
             height: '0',
           },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'float': 'float 6s ease-in-out infinite',
       },
       backgroundImage: {
-        'gradient-customer': 'linear-gradient(to right, var(--tw-gradient-stops))',
-        'gradient-vendor': 'linear-gradient(to right, var(--tw-gradient-stops))',
+        'gradient-customer': 'linear-gradient(to right, hsl(var(--primary)), hsl(var(--chart-4)))',
+        'gradient-vendor': 'linear-gradient(to right, hsl(var(--secondary)), hsl(var(--muted)))',
       },
       boxShadow: {
         DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
@@ -104,6 +109,7 @@ export default {
         xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
         '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
         inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+        glow: '0 0 20px -5px hsl(var(--primary) / 0.5)',
       }
     },
   },

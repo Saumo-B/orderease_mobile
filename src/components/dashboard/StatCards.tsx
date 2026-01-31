@@ -33,18 +33,18 @@ const formatCurrency = (value: number) => {
 };
 
 export function StatCards({ data }: StatCardsProps) {
-    const salesDiff = data.todaysSales - data.yesterdaysSales;
-    const salesDiffPercent = data.yesterdaysSales > 0 ? (salesDiff / data.yesterdaysSales) * 100 : 100;
+  const salesDiff = data.todaysSales - data.yesterdaysSales;
+  const salesDiffPercent = data.yesterdaysSales > 0 ? (salesDiff / data.yesterdaysSales) * 100 : 100;
 
   const stats = [
     {
       title: "Today's Sales",
       value: formatCurrency(data.todaysSales),
       icon: TrendingUp,
-      color: 'text-green-400',
+      color: 'text-primary',
       footer: (
         <span className="text-xs text-muted-foreground">
-            {salesDiff >= 0 ? '+' : ''}{salesDiffPercent.toFixed(1)}% vs yesterday
+          {salesDiff >= 0 ? '+' : ''}{salesDiffPercent.toFixed(1)}% vs yesterday
         </span>
       )
     },
@@ -52,21 +52,21 @@ export function StatCards({ data }: StatCardsProps) {
       title: 'Orders Count',
       value: data.orderCounts.total,
       icon: ShoppingCart,
-      color: 'text-yellow-400',
+      color: 'text-primary',
       footer: `${data.orderCounts.completed} completed, ${data.orderCounts.pending} pending`
     },
     {
       title: 'Avg. Order Value',
       value: formatCurrency(data.averageOrderValue),
       icon: BarChart,
-      color: 'text-yellow-400',
+      color: 'text-primary',
       footer: `From ${data.orderCounts.total} total orders`
     },
-     {
+    {
       title: 'Peak Hour',
       value: data.peakHour || 'AM/PM',
       icon: Clock,
-      color: 'text-green-400',
+      color: 'text-primary',
       footer: "Today's busiest time"
     },
   ];
@@ -74,16 +74,18 @@ export function StatCards({ data }: StatCardsProps) {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (
-        <Card key={stat.title} className="bg-card/70 border-border flex flex-col group duration-300">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground transition-colors">
+        <Card key={stat.title} className="glass-card border-white/5 flex flex-col group duration-300 hover:shadow-glow hover:-translate-y-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-5 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
               {stat.title}
             </CardTitle>
-            <stat.icon className={`h-5 w-5 ${stat.color}`} />
+            <div className={`p-2 rounded-lg bg-white/5 ${stat.color.replace('text-', 'text-opacity-80 text-')}`}>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            </div>
           </CardHeader>
-          <CardContent className="flex-grow p-4 pt-0">
-            <div className="text-3xl font-bold text-foreground transition-colors">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
+          <CardContent className="flex-grow p-5 pt-1">
+            <div className="text-3xl font-black text-foreground transition-colors tracking-tight">{stat.value}</div>
+            <p className="text-xs text-muted-foreground/60 mt-2 whitespace-nowrap font-medium">
               {stat.footer}
             </p>
           </CardContent>

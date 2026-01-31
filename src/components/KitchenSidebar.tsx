@@ -1,36 +1,29 @@
-
 'use client';
 
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import {
-  BarChart,
-  BookOpen,
-  Boxes,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  Table,
-  User,
   Search,
+  LayoutDashboard,
+  BarChart,
+  Boxes,
+  BookOpen,
   Users,
   Building,
+  User,
+  LogOut,
   Code,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Menu
 } from 'lucide-react';
-import { Separator } from './ui/separator';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const allMenuItems = [
+const mainNavItems = [
   { icon: Search, label: 'Orders', href: '/kitchen', id: 'orders' },
   { icon: LayoutDashboard, label: 'Dashboard', href: '/kitchen/dashboard', id: 'dashboard' },
   { icon: BarChart, label: 'Sales Report', href: '/kitchen/sales-reports', id: 'salesReport' },
@@ -40,156 +33,148 @@ const allMenuItems = [
   { icon: Building, label: 'Outlets', href: '/kitchen/branches', id: 'branches' },
 ];
 
-const baseBottomMenuItems = [
-  { icon: User, label: 'User Profile', href: '/kitchen/profile' },
-  { icon: LogOut, label: 'Logout', href: '#' },
+const secondaryNavItems = [
+  { icon: User, label: 'Profile', href: '/kitchen/profile', id: 'profile' },
+  { icon: Settings, label: 'Settings', href: '/kitchen/settings', id: 'settings' },
 ];
 
 const FEATURE_FLAGS_KEY = 'featureFlags';
 
+import { useOrder } from '@/context/OrderContext';
+
 export function KitchenSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-  const [menuItems, setMenuItems] = useState(allMenuItems);
-  const [bottomMenuItems, setBottomMenuItems] = useState(baseBottomMenuItems);
-  
-  const [initialPath, setInitialPath] = useState(pathname);
-  
-  useEffect(() => {
-    if (isOpen && pathname !== initialPath) {
-      setIsOpen(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [visibleItems, setVisibleItems] = useState(mainNavItems);
+  const [developerMode, setDeveloperMode] = useState(false);
+  const { setIsPageLoading, kitchenOrders } = useOrder();
+
+  const handleNavClick = (href: string) => {
+    if (pathname !== href) {
+      setIsPageLoading(true);
     }
-    setInitialPath(pathname);
-  }, [pathname, isOpen, initialPath]);
+  };
 
   useEffect(() => {
     try {
       const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
-      if (storedFlags) {
-        const flags = JSON.parse(storedFlags);
-        const visibleItems = allMenuItems.filter(item => {
-            const flag = flags[item.id];
-            if (typeof flag === 'boolean') {
-                return flag;
-            }
-            if (typeof flag === 'object' && flag !== null) {
-                return flag.type === true;
-            }
-            return true; // Default to show if flag is not defined
-        });
-        setMenuItems(visibleItems);
-      } else {
-        setMenuItems(allMenuItems); // Or hide all by default if no flags are found
-      }
+      const flags = storedFlags ? JSON.parse(storedFlags) : {};
+
+      const filtered = mainNavItems.filter(item => {
+        const flag = flags[item.id];
+        if (typeof flag === 'boolean') return flag;
+        if (typeof flag === 'object' && flag !== null) return flag.type === true;
+        return true;
+      });
+      setVisibleItems(filtered);
 
       const userProfile = localStorage.getItem('userProfile');
-      const role = userProfile ? JSON.parse(userProfile).role : '';
-
-      const dynamicItems = [];
-      if (role === 'dev') {
-        dynamicItems.push({ icon: Code, label: 'Developer Options', href: '/kitchen/developer-options' });
-      } else {
-        dynamicItems.push({ icon: Settings, label: 'Settings', href: '/kitchen/settings' });
+      if (userProfile && JSON.parse(userProfile).role === 'dev') {
+        setDeveloperMode(true);
       }
-      setBottomMenuItems([...dynamicItems, ...baseBottomMenuItems]);
 
-    } catch (error) {
-      console.error("Failed to read feature flags or user profile", error);
-      setMenuItems(allMenuItems);
-      setBottomMenuItems([{ icon: Settings, label: 'Settings', href: '/kitchen/settings' }, ...baseBottomMenuItems]);
+    } catch (e) {
+      console.error("Sidebar flag logic error", e);
     }
-  }, [isOpen]);
-
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
-      setInitialPath(pathname);
-    }
-    setIsOpen(open);
-  }
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userProfile');
     localStorage.removeItem('staticUserProfile');
     localStorage.removeItem(FEATURE_FLAGS_KEY);
-    router.push('/');
-    setIsOpen(false);
+    window.location.href = '/';
   };
 
-  const handleBottomMenuClick = (item: typeof baseBottomMenuItems[0]) => {
-      if (item.label === 'Logout') {
-        handleLogout();
-      } else if (item.href !== '#') {
-        router.push(item.href);
-        setIsOpen(false);
-      }
-      // For settings or other '#' links, do nothing for now.
-  }
-
-
   return (
-    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
+    <motion.div
+      initial={{ width: 240 }}
+      animate={{ width: collapsed ? 80 : 240 }}
+      className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-card border-r border-white/5 shadow-2xl"
+    >
+      <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
+        {!collapsed && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-bold text-xl text-gradient tracking-tight"
+          >
+            OrderEase
+          </motion.span>
+        )}
         <Button
+          variant="ghost"
           size="icon"
-          className="bg-primary/20 text-primary p-2 rounded-lg"
+          onClick={() => setCollapsed(!collapsed)}
+          className="ml-auto text-muted-foreground hover:text-primary transition-colors"
         >
-          <Menu className="h-5 w-5" />
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
-      </SheetTrigger>
-      <SheetContent
-        side="left"
-        className="bg-card w-[270px] p-4 flex flex-col"
-      >
-        <SheetHeader>
-          <SheetTitle className="text-primary font-headline text-2xl text-center">
-            Main Menu
-          </SheetTitle>
-        </SheetHeader>
-        <div className="flex flex-col flex-grow">
-          <nav className="flex flex-col">
-            {menuItems.map((item, index) => {
-              const isActive = pathname === item.href;
-              return (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  asChild
-                  className={cn(
-                    'justify-start text-base text-foreground/80',
-                    isActive && 'bg-primary/20 text-primary'
-                  )}
-                >
-                  <Link href={item.href}>
-                    <item.icon className="mr-4 h-5 w-5" />
-                    {item.label}
-                  </Link>
-                </Button>
-              );
-            })}
-          </nav>
-          <div className="mt-auto">
-            <Separator className="my-4 bg-border/50" />
-            <nav className="flex flex-col">
-              {bottomMenuItems.map((item, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  className={cn(
-                    "justify-start text-base text-foreground/80",
-                     pathname === item.href && 'bg-primary/20 text-primary'
-                  )}
-                  onClick={() => handleBottomMenuClick(item)}
-                >
-                  <item.icon className="mr-4 h-5 w-5" />
-                  {item.label}
-                </Button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+
+      <div className="flex-grow py-6 flex flex-col gap-2 overflow-y-auto no-scrollbar px-3">
+        {visibleItems.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link key={item.href} href={item.href} className="w-full" onClick={() => handleNavClick(item.href)}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-3 h-12 rounded-xl transition-all duration-200",
+                  isActive ? "bg-primary/10 text-primary font-semibold shadow-sm" : "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+                  collapsed && "justify-center px-0"
+                )}
+              >
+                <item.icon size={22} className={cn(isActive && "text-primary")} />
+                {!collapsed && <span>{item.label}</span>}
+              </Button>
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="p-3 border-t border-white/5 flex flex-col gap-2">
+        {secondaryNavItems.map(item => (
+          <Link key={item.href} href={item.href} className="w-full" onClick={() => handleNavClick(item.href)}>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 h-10 rounded-lg",
+                pathname === item.href ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground",
+                collapsed && "justify-center px-0"
+              )}
+            >
+              <item.icon size={18} />
+              {!collapsed && <span className="text-sm">{item.label}</span>}
+            </Button>
+          </Link>
+        ))}
+        {developerMode && (
+          <Link href="/kitchen/developer-options" className="w-full">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 h-10 rounded-lg text-purple-400 hover:text-purple-300 hover:bg-purple-400/10",
+                collapsed && "justify-center px-0"
+              )}
+            >
+              <Code size={18} />
+              {!collapsed && <span className="text-sm">Dev Tools</span>}
+            </Button>
+          </Link>
+        )}
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className={cn(
+            "w-full justify-start gap-3 h-10 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10 mt-2",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <LogOut size={18} />
+          {!collapsed && <span className="text-sm">Logout</span>}
+        </Button>
+      </div>
+    </motion.div>
   );
 }

@@ -30,7 +30,7 @@ const pageIdMap: { [path: string]: string } = {
 export function KitchenHeader() {
   const { currentBranch, allBranches, handleBranchSelect } = useOrder();
   const pathname = usePathname();
-  
+
   const [isBranchSwitcherOpen, setIsBranchSwitcherOpen] = useState(false);
   const [showBranchSelector, setShowBranchSelector] = useState(false);
 
@@ -41,22 +41,22 @@ export function KitchenHeader() {
 
   useEffect(() => {
     try {
-        const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
-        if (storedFlags) {
-            const flags = JSON.parse(storedFlags);
-            const pageId = pageIdMap[pathname];
-            
-            if (pageId && flags[pageId] && typeof flags[pageId] === 'object' && flags[pageId].branchSelector) {
-                setShowBranchSelector(true);
-            } else {
-                setShowBranchSelector(false);
-            }
+      const storedFlags = localStorage.getItem(FEATURE_FLAGS_KEY);
+      if (storedFlags) {
+        const flags = JSON.parse(storedFlags);
+        const pageId = pageIdMap[pathname];
+
+        if (pageId && flags[pageId] && typeof flags[pageId] === 'object' && flags[pageId].branchSelector) {
+          setShowBranchSelector(true);
         } else {
-          setShowBranchSelector(false); 
+          setShowBranchSelector(false);
         }
-    } catch (e) {
-        console.error("Failed to read feature flags", e);
+      } else {
         setShowBranchSelector(false);
+      }
+    } catch (e) {
+      console.error("Failed to read feature flags", e);
+      setShowBranchSelector(false);
     }
   }, [pathname]);
 
@@ -73,7 +73,7 @@ export function KitchenHeader() {
         title: 'Sales Report',
       };
     }
-     if (pathname === '/kitchen/inventory') {
+    if (pathname === '/kitchen/inventory') {
       return {
         icon: <Boxes className="h-5 w-5" />,
         title: 'Inventory',
@@ -85,23 +85,23 @@ export function KitchenHeader() {
         title: 'Menu',
       };
     }
-     if (pathname === '/kitchen/profile') {
+    if (pathname === '/kitchen/profile') {
       return {
         icon: <User className="h-5 w-5" />,
         title: 'Profile',
       };
     }
     if (pathname === '/kitchen/roles') {
-        return {
-            icon: <Users className="h-5 w-5" />,
-            title: 'Roles',
-        };
+      return {
+        icon: <Users className="h-5 w-5" />,
+        title: 'Roles',
+      };
     }
     if (pathname === '/kitchen/branches') {
-        return {
-            icon: <Building className="h-5 w-5" />,
-            title: 'Outlets',
-        };
+      return {
+        icon: <Building className="h-5 w-5" />,
+        title: 'Outlets',
+      };
     }
     if (pathname === '/kitchen/developer-options') {
       return {
@@ -131,78 +131,78 @@ export function KitchenHeader() {
   const isAllAccess = staticProfile.branchName === 'All';
 
   return (
-    <header className="bg-background/80 backdrop-blur-sm sticky top-0 z-10 border-b border-border">
-       <div className="max-w-4xl mx-auto">
-          <div className="p-4 flex justify-between items-center min-h-[80px]">
-            <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  className="bg-primary/20 text-primary p-2 rounded-lg pointer-events-none"
-                >
-                  {icon}
-                </Button>
-                <h1 className="text-xl font-bold font-headline text-foreground">
-                {title}
-                </h1>
-            </div>
-             <div className="flex items-center gap-3">
-                 {currentBranch && !isProfilePage && !isDevOptionsPage && !isSettingsPage && showBranchSelector && (
-                    isAllAccess ? (
-                        <Popover open={isBranchSwitcherOpen} onOpenChange={setIsBranchSwitcherOpen}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={isBranchSwitcherOpen}
-                                className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border"
-                                >
-                                    <div className="flex items-center gap-2">
-                                    <div className="h-2 w-2 rounded-full bg-primary"></div>
-                                    <span className="truncate">{currentBranch.name}</span>
-                                    </div>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card">
-                                <Command>
-                                <CommandInput placeholder="Search branch..." />
-                                <CommandList>
-                                <CommandEmpty>No branch found.</CommandEmpty>
-                                <CommandGroup>
-                                    {allBranches.map((branch) => (
-                                    <CommandItem
-                                        key={branch.id}
-                                        value={branch.name}
-                                        onSelect={() => onBranchSelect(branch)}
-                                    >
-                                        <Check
-                                        className={cn(
-                                            "mr-2 h-4 w-4",
-                                            currentBranch.id === branch.id ? "opacity-100" : "opacity-0"
-                                        )}
-                                        />
-                                        {branch.name}
-                                    </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                                </CommandList>
-                                </Command>
-                            </PopoverContent>
-                        </Popover>
-                    ) : (
-                         <Button
-                            variant="outline"
-                            className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border cursor-default"
-                            >
-                                <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-primary"></div>
-                                <span className="truncate">{currentBranch.name}</span>
-                                </div>
-                        </Button>
-                    )
-                )}
-            </div>
+    <header className="glass sticky top-0 z-10">
+      <div className="max-w-4xl mx-auto">
+        <div className="p-4 flex justify-between items-center min-h-[80px]">
+          <div className="flex items-center gap-3">
+            <Button
+              size="icon"
+              className="bg-primary/10 text-primary p-2 rounded-xl pointer-events-none ring-1 ring-primary/20 shadow-lg shadow-primary/10"
+            >
+              {icon}
+            </Button>
+            <h1 className="text-2xl font-bold font-headline text-gradient">
+              {title}
+            </h1>
           </div>
-       </div>
+          <div className="flex items-center gap-3">
+            {currentBranch && !isProfilePage && !isDevOptionsPage && !isSettingsPage && showBranchSelector && (
+              isAllAccess ? (
+                <Popover open={isBranchSwitcherOpen} onOpenChange={setIsBranchSwitcherOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isBranchSwitcherOpen}
+                      className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-primary"></div>
+                        <span className="truncate">{currentBranch.name}</span>
+                      </div>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 bg-card">
+                    <Command>
+                      <CommandInput placeholder="Search branch..." />
+                      <CommandList>
+                        <CommandEmpty>No branch found.</CommandEmpty>
+                        <CommandGroup>
+                          {allBranches.map((branch) => (
+                            <CommandItem
+                              key={branch.id}
+                              value={branch.name}
+                              onSelect={() => onBranchSelect(branch)}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  currentBranch.id === branch.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {branch.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-[150px] justify-center items-center text-base font-medium text-foreground h-10 px-4 bg-card border-border cursor-default"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-primary"></div>
+                    <span className="truncate">{currentBranch.name}</span>
+                  </div>
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+      </div>
     </header>
   );
 }
