@@ -127,8 +127,19 @@ export function KitchenHeader() {
   }
 
   const { icon, title } = getPageInfo();
-  const staticProfile = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('staticUserProfile') || '{}') : {};
-  const isAllAccess = staticProfile.branchName === 'All';
+  const [isAllAccess, setIsAllAccess] = useState(false);
+
+  useEffect(() => {
+    try {
+      const profile = localStorage.getItem('staticUserProfile');
+      if (profile) {
+        const parsed = JSON.parse(profile);
+        setIsAllAccess(parsed.branchName === 'All');
+      }
+    } catch (e) {
+      console.error("Error reading static profile", e);
+    }
+  }, []);
 
   return (
     <header className="glass sticky top-0 z-10">

@@ -38,7 +38,7 @@ export function CreateOrderDialog({
   setIsOpen,
   onOrderCreated,
 }: CreateOrderDialogProps) {
-  const { menuItemsCache, setMenuItemsCache } = useOrder();
+  const { menuItems: contextMenuItems, fetchMenuItems } = useOrder();
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -51,110 +51,63 @@ export function CreateOrderDialog({
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
-    async function fetchMenu() {
+    async function loadMenu() {
       if (isOpen) {
+        setLoadingMenu(true);
         setMenuError(null);
-        const branchId = getBranchId();
-        if (!branchId) {
-          setMenuError("Branch ID not found. Please log in again.");
-          return;
-        }
 
-        // 1. Check Context Cache
-        if (menuItemsCache[branchId]) {
-          const cachedItems = menuItemsCache[branchId];
-          // Fix type mismatch by mapping strictly if needed, or assume cache matches structure
-          // The cache stores FullMenuItem. We need to map it to local MenuItem interface if they differ.
-          // Local MenuItem expects 'image', FullMenuItem has 'imageUrl'.
-          const mappedItems = cachedItems.map((item: any) => ({
-            ...item,
-            image: item.imageUrl || item.image // Handle both keys
-          }));
+        try {
+          let itemsToUse = contextMenuItems;
 
-          setMenuItems(mappedItems);
-          const uniqueCategories = Array.from(new Set(mappedItems.map((item: any) => item.category)));
-          uniqueCategories.sort();
-          setCategories(['All', ...uniqueCategories as string[]]);
-          setActiveCategory('All');
-          setLoadingMenu(false);
-          return;
-        }
-
-        // 2. Check Local Storage
-        const localCacheKey = `menu-cache-${branchId}`;
-        const storedCache = localStorage.getItem(localCacheKey);
-        if (storedCache) {
-          try {
-            const parsedCache = JSON.parse(storedCache);
-            if (Array.isArray(parsedCache) && parsedCache.length > 0) {
-              const mappedItems = parsedCache.map((item: any) => ({
-                ...item,
-                image: item.imageUrl || item.image
-              }));
-              setMenuItems(mappedItems);
-              const uniqueCategories = Array.from(new Set(mappedItems.map((item: any) => item.category)));
-              uniqueCategories.sort();
-              setCategories(['All', ...uniqueCategories as string[]]);
-              setActiveCategory('All');
+          if (!itemsToUse || itemsToUse.length === 0) {
+            const branchId = getBranchId();
+            if (branchId) {
+              // Attempt fetch if missing
+              await fetchMenuItems(branchId);
               setLoadingMenu(false);
-
-              // Sync to context
-              setMenuItemsCache(prev => ({ ...prev, [branchId]: parsedCache }));
+              // Note: We rely on the context updating to trigger a re-render or effect re-run if we added contextMenuItems to deps.
+              // But since we are inside a function, this specific closure won't see the new items immediately.
+              // However, the component WILL re-render when contextMenuItems updates,
+              // and we should have a separate effect that syncs props/context to local state.
               return;
             }
-          } catch (e) {
-            console.warn("Failed to parse local menu cache", e);
           }
-        }
 
-        // 3. Network Fetch
-        setLoadingMenu(true);
-        try {
-          const response = await axiosInstance.get(`/api/menu?branch=${branchId}`);
-          if (response.data && Array.isArray(response.data)) {
-            const formattedMenuItems: MenuItem[] = response.data.map((item: any) => ({
-              id: item._id,
+          if (itemsToUse.length > 0) {
+            // Map FullMenuItem to MenuItem (Ui type)
+            const formattedMenuItems: MenuItem[] = itemsToUse.map(item => ({
+              id: item.id,
               name: item.name,
               description: item.description,
               price: item.price,
-              image: item.imageUrl, // Map imageUrl to image
+              image: item.imageUrl, // FullMenuItem has imageUrl, MenuItem has image
               category: item.category,
               outOfStock: item.outOfStock || item.manualOutOfStock,
               manualOutOfStock: item.manualOutOfStock,
             }));
+
             const uniqueCategories = Array.from(new Set(formattedMenuItems.map(item => item.category)));
             uniqueCategories.sort();
-
-            // Sort menu items alphabetically by name
             formattedMenuItems.sort((a, b) => a.name.localeCompare(b.name));
 
             setMenuItems(formattedMenuItems);
             const allCategories = ['All', ...uniqueCategories];
             setCategories(allCategories);
-            setActiveCategory(allCategories[0]);
-
-            // Update Caches (Store the formatted ones with 'image' property? Or original structure?)
-            // To match context type which expects 'imageUrl', we might need to conform. 
-            // However, local state uses 'image'. We'll store what we have.
-            // For simplicity, let's store the version compatible with the app pages.
-            // But here we need to display it.
-
-            setMenuItemsCache(prev => ({ ...prev, [branchId]: response.data })); // Store raw/full data in cache
-            localStorage.setItem(localCacheKey, JSON.stringify(response.data));
-
-          } else {
-            throw new Error("Invalid data format from API");
+            // Only reset category if not initialized? Or always "All" on open?
+            // Previous logic set it to "All" on open via resetForm effect.
+            // setActiveCategory(allCategories[0]); 
           }
         } catch (err: any) {
-          console.error("Failed to fetch menu:", err);
-          setMenuError(err.message || "Could not load the menu. Please try again.");
+          console.error("Failed to load menu", err);
+          setMenuError("Could not load menu.");
         } finally {
           setLoadingMenu(false);
         }
       }
     }
-    fetchMenu();
-  }, [isOpen, menuItemsCache, setMenuItemsCache]);
+
+    loadMenu();
+  }, [isOpen, contextMenuItems, fetchMenuItems]);
 
   const resetForm = () => {
     setCustomerName('');

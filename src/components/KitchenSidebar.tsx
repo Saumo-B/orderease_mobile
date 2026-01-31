@@ -47,7 +47,7 @@ export function KitchenSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [visibleItems, setVisibleItems] = useState(mainNavItems);
   const [developerMode, setDeveloperMode] = useState(false);
-  const { setIsPageLoading, kitchenOrders } = useOrder();
+  const { setIsPageLoading } = useOrder();
 
   const handleNavClick = (href: string) => {
     if (pathname !== href) {
