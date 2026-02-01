@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
-import { Loader2, AlertTriangle, PackageOpen, Plus, Ban } from 'lucide-react';
+import { Loader2, AlertTriangle, PackageOpen, Plus, Ban, Search } from 'lucide-react';
 import type { FullMenuItem } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
@@ -90,6 +90,7 @@ export default function MenuManagementPage() {
 
   const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Pagination state
   const [visibleCount, setVisibleCount] = useState(20);
@@ -217,9 +218,12 @@ export default function MenuManagementPage() {
     setIsEditDialogOpen(true);
   };
 
-  const filteredMenuItems = activeCategory === 'All'
-    ? menuItems
-    : menuItems.filter(item => item.category === activeCategory);
+  const filteredMenuItems = menuItems.filter(item => {
+    const matchesCategory = activeCategory === 'All' || item.category === activeCategory;
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   // Pagination Logic
   const visibleMenuItems = filteredMenuItems.slice(0, visibleCount);
@@ -235,13 +239,18 @@ export default function MenuManagementPage() {
       onMenuItemAdded={handleMenuItemAdded}
     >
       <Card
-        className="h-full flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed min-h-[250px]"
+        className="h-full w-full flex flex-col cursor-pointer group bg-card/70 border-border border-2 border-dashed min-h-0 overflow-hidden"
         onClick={() => setIsAddMenuItemDialogOpen(true)}
       >
-        <CardContent className="flex flex-row items-center justify-center p-4">
-          <Plus className="h-6 w-6 text-foreground transition-colors" />
-          <p className="ml-2 text-sm font-semibold text-foreground transition-colors">
-            Add Item
+        {/* Fake Image Section to match Item Card Aspect Ratio */}
+        <div className="aspect-[4/3] w-full flex items-center justify-center bg-white/5 border-b border-dashed border-border group-hover:bg-primary/5 transition-colors shrink-0">
+          <Plus className="h-10 w-10 text-foreground/50 group-hover:text-primary transition-colors group-hover:scale-110 duration-300" />
+        </div>
+
+        {/* Fake Content Section */}
+        <CardContent className="flex flex-col items-center justify-center p-3 flex-grow">
+          <p className="text-sm font-semibold text-foreground/70 group-hover:text-primary transition-colors text-center">
+            Add New Item
           </p>
         </CardContent>
       </Card>
@@ -257,69 +266,102 @@ export default function MenuManagementPage() {
         </div>
       ) : (
         <div>
-          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="mb-6">
-            <TabsList className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-              {categories.map(category => (
-                <TabsTrigger key={category} value={category}>
-                  {category}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-
-          {menuItems.length > 0 ? (
-            <div className="space-y-8">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {/* Show Add Card only on the first page or if explicitly desired. Let's keep it as the first item always for easy access */}
-                {addMenuItemCard}
-
-                {visibleMenuItems.map((item) => (
-                  <Card
-                    key={item.id}
-                    className={cn(
-                      "group bg-card/70 border-border flex flex-col overflow-hidden duration-300",
-                      "cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
-                    )}
-                    onClick={() => handleEditClick(item)}
-                  >
-                    <div className="aspect-video relative overflow-hidden">
-                      <MenuItemImage
-                        src={item.imageUrl}
-                        alt={item.name}
-                        outOfStock={item.outOfStock}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2">
-                        <span className="text-white text-xs font-medium">Click to edit</span>
-                      </div>
-                    </div>
-                    <CardHeader className="p-3 pb-1 flex-grow">
-                      <CardTitle className="text-base text-foreground truncate transition-colors group-hover:text-primary">{item.name}</CardTitle>
-                      <CardDescription className="text-xs text-muted-foreground mt-1 h-8 overflow-hidden line-clamp-2">{item.description}</CardDescription>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{item.category}</p>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 mt-auto flex justify-between items-center">
-                      <p className="text-lg font-bold text-gradient">₹{item.price}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {visibleCount < filteredMenuItems.length && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full max-w-sm"
-                    onClick={() => setVisibleCount(prev => prev + 20)}
-                  >
-                    Load More ({filteredMenuItems.length - visibleCount} remaining)
-                  </Button>
-                </div>
-              )}
+          {/* Header Bar: Search & Categories */}
+          <div className="flex flex-col xl:flex-row gap-4 justify-between items-center bg-card/40 backdrop-blur-md p-2 rounded-3xl border border-white/5 shadow-sm mb-8">
+            {/* Search Bar */}
+            <div className="relative w-full xl:w-96 shrink-0 z-10">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search menu items..."
+                className="w-full h-12 pl-11 pr-4 rounded-2xl bg-background/50 border-white/10 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all outline-none text-sm placeholder:text-muted-foreground/50 border"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              {addMenuItemCard}
+
+            {/* Categories */}
+            <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full xl:w-auto min-w-0">
+              <TabsList className="h-12 bg-transparent p-0 w-full justify-start xl:justify-end overflow-x-auto no-scrollbar flex items-center gap-2">
+                {categories.map(category => (
+                  <TabsTrigger
+                    key={category}
+                    value={category}
+                    className={cn(
+                      "rounded-xl px-4 h-10 text-sm font-medium transition-all duration-300 shrink-0 border border-transparent",
+                      activeCategory === category
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5 hover:border-white/10"
+                    )}
+                  >
+                    {category}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4 p-1">
+            {/* Show Add Card */}
+            {addMenuItemCard}
+
+            {visibleMenuItems.map((item) => (
+              <Card
+                key={item.id}
+                className={cn(
+                  "group relative overflow-hidden transition-all duration-500 flex flex-col h-full",
+                  "bg-gradient-to-br from-white/10 to-white/5 border-white/10",
+                  "hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 hover:border-primary/50 cursor-pointer"
+                )}
+                onClick={() => handleEditClick(item)}
+              >
+                {/* Image Section */}
+                <div className="aspect-[4/3] relative overflow-hidden bg-black/50 shrink-0">
+                  <MenuItemImage
+                    src={item.imageUrl}
+                    alt={item.name}
+                    outOfStock={item.outOfStock}
+                  />
+                  {/* Edit Overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
+                    <span className="text-white font-bold tracking-widest text-xs border border-white/30 px-4 py-2 rounded-full uppercase scale-90 group-hover:scale-100 transition-transform">
+                      Edit Item
+                    </span>
+                  </div>
+                  {/* Price Tag (Float) */}
+                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md text-white px-2 py-1 rounded text-xs font-bold border border-white/10 shadow-lg">
+                    ₹{item.price}
+                  </div>
+                </div>
+
+                {/* Content Section */}
+                <CardHeader className="p-3 space-y-1 flex-grow">
+                  <div className="flex justify-between items-start gap-2">
+                    <CardTitle className="text-base font-bold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+                      {item.name}
+                    </CardTitle>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold text-primary/80">
+                    {item.category}
+                  </p>
+                  <CardDescription className="text-xs text-muted-foreground/80 line-clamp-2">
+                    {item.description}
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+
+          {visibleCount < filteredMenuItems.length && (
+            <div className="flex justify-center pt-8 pb-8">
+              <Button
+                variant="outline"
+                size="lg"
+                className="bg-white/5 border-white/10 hover:bg-white/10 text-white min-w-[200px]"
+                onClick={() => setVisibleCount(prev => prev + 20)}
+              >
+                Load More Items
+              </Button>
             </div>
           )}
         </div>

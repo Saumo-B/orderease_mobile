@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useOrder } from '@/context/OrderContext';
 import { Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 export default function KitchenLayout({
   children,
@@ -17,22 +18,35 @@ export default function KitchenLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { isPageLoading, branchLoading } = useOrder();
+  const { branchLoading } = useOrder();
   const [showLoader, setShowLoader] = useState(true);
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     // This effect runs only on the client, after the initial render.
-    // This ensures that the decision to show the loader or content
-    // is made after hydration, preventing a mismatch.
-    if (!isPageLoading && !branchLoading) {
+    if (!branchLoading) {
       setShowLoader(false);
     }
-  }, [isPageLoading, branchLoading]);
+  }, [branchLoading]);
 
   const showHeader =
     pathname !== '/kitchen/login' && pathname !== '/kitchen/register';
 
+  /* Hooks must be before conditional returns */
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => setIsMobile(e.matches);
+
+    // Initial check
+    handleChange(mediaQuery);
+
+    // Listener
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   if (showLoader) {
     return (
@@ -47,19 +61,44 @@ export default function KitchenLayout({
 
   return (
     <div className="min-h-screen bg-background text-foreground flex">
-      {showHeader && <KitchenSidebar />}
+      {showHeader && (
+        <KitchenSidebar
+          collapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
+      )}
 
-      <div className={cn("flex-grow flex flex-col min-h-screen transition-all duration-300", showHeader && "md:pl-20 lg:pl-[240px]")}>
+      <motion.div
+        className="flex-grow flex flex-col min-h-screen w-full"
+        initial={false}
+        animate={{
+          paddingLeft: showHeader && !isMobile ? (isSidebarCollapsed ? 80 : 240) : 0
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
         {showHeader && <div className="md:hidden"><KitchenHeader /></div>}
         {showHeader && <div className="hidden md:block sticky top-0 bg-background/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between z-30">
-          <h1 className="text-2xl font-bold font-headline text-gradient">Kitchen Dashboard</h1>
+          <h1 className="text-2xl font-bold font-headline text-gradient">
+            {pathname === '/kitchen' && 'Live Orders'}
+            {pathname === '/kitchen/dashboard' && 'Dashboard Overview'}
+            {pathname === '/kitchen/sales-reports' && 'Sales Reports'}
+            {pathname === '/kitchen/inventory' && 'Inventory Management'}
+            {pathname === '/kitchen/menu-management' && 'Menu Management'}
+            {pathname === '/kitchen/roles' && 'Role Management'}
+            {pathname === '/kitchen/branches' && 'Outlet Management'}
+            {pathname === '/kitchen/profile' && 'Profile'}
+            {pathname === '/kitchen/settings' && 'Settings'}
+            {pathname === '/kitchen/developer-options' && 'Developer Options'}
+            {/* Fallback */}
+            {!['/kitchen', '/kitchen/dashboard', '/kitchen/sales-reports', '/kitchen/inventory', '/kitchen/menu-management', '/kitchen/roles', '/kitchen/branches', '/kitchen/profile', '/kitchen/settings', '/kitchen/developer-options'].includes(pathname) && 'Kitchen Dashboard'}
+          </h1>
           <BranchSwitcher />
         </div>}
 
         <main className={cn('pb-24 md:pb-8 flex-grow overflow-x-hidden no-scrollbar', showHeader && "px-4 py-8 md:px-8")}>
           {children}
         </main>
-      </div>
+      </motion.div>
 
       {showHeader && <div className="md:hidden"><KitchenBottomNav /></div>}
     </div>

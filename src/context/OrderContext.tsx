@@ -21,8 +21,8 @@ interface OrderContextType {
   fetchIngredients: (branchId: string) => Promise<void>;
   fetchStaff: (branchId: string) => Promise<void>;
 
-  markAsPaid: (id: string) => Promise<boolean>;
-  completeOrder: (id: string) => Promise<boolean>;
+  markAsPaid: (id: string, currentStatus: string) => Promise<boolean>;
+  completeOrder: (id: string, currentStatus: string) => Promise<boolean>;
   cancelOrder: (id: string) => Promise<boolean>;
   updateOrderItems: (orderId: string, customer: { name: string, phone: string }, items: { menuItem: string, qty: number, price: number, served: boolean, initialQty: number }[]) => Promise<boolean>;
   deleteIngredient: (ingredientId: string) => Promise<boolean>;
@@ -271,6 +271,33 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const [lastLoadedBranchId, setLastLoadedBranchId] = useState<string | null>(null);
+
+  // Polling for kitchen orders
+  /*
+  useEffect(() => {
+    if (!currentBranch) return;
+
+    const pollInterval = setInterval(() => {
+      // Silent fetch
+      const branchId = getBranchId();
+      if (branchId) {
+        axiosInstance.get(`/api/kitchen/today?branch=${branchId}`)
+          .then(res => {
+            const backendOrders = res.data.orders || [];
+            const fetchedOrders: Order[] = backendOrders.map(mapBackendOrderToFrontend);
+            // Compare length or token hash to avoid unnecessary state updates if needed, 
+            // but for now react handles diffing reasonably well if simple.
+            setKitchenOrders(fetchedOrders.sort((a, b) => b.timestamp - a.timestamp));
+          })
+          .catch(err => console.error("Polling error", err));
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [currentBranch]);
+  */
+
   useEffect(() => {
     const isAuthPage = pathname === '/kitchen/login' || pathname === '/kitchen/register' || pathname === '/';
     if (isAuthPage) {
@@ -280,46 +307,66 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     }
 
     async function loadInitialData() {
-      setIsPageLoading(true);
-      setBranchLoading(true);
+      // Avoid reloading if we already have data for this branch
+      const branchId = getBranchId();
+      if (branchId === lastLoadedBranchId) {
+        // Data is already loaded for this branch.
+        setIsPageLoading(false);
+        setBranchLoading(false);
+        return;
+      }
+
+      setBranchLoading(true); // Critical phase start
+      try {
+        await fetchBranchData();
+      } catch (e) {
+        console.error("Branch fetch failed", e);
+      } finally {
+        setBranchLoading(false); // Critical phase end
+      }
+
+      setIsPageLoading(true); // Content phase start
 
       try {
-        // Ensure branch data and local storage are synchronized first
-        await fetchBranchData();
-
-        const branchId = getBranchId();
+        // Re-read branch ID after fetchBranchData
+        const currentBranchId = getBranchId();
         const promises: Promise<void>[] = [fetchKitchenOrders()];
 
-        if (branchId && branchId !== '68d6fda5bab89f8afc545cee') {
-          promises.push(fetchMenuItems(branchId));
-          promises.push(fetchIngredients(branchId));
-          promises.push(fetchStaff(branchId));
+        if (currentBranchId && currentBranchId !== '68d6fda5bab89f8afc545cee') {
+          promises.push(fetchMenuItems(currentBranchId));
+          promises.push(fetchIngredients(currentBranchId));
+          promises.push(fetchStaff(currentBranchId));
         }
 
         await Promise.all(promises);
+        setLastLoadedBranchId(currentBranchId);
+
       } catch (err) {
         console.error("Error loading initial data:", err);
       } finally {
-        setIsPageLoading(false);
-        setBranchLoading(false);
+        setIsPageLoading(false); // Content phase end
       }
     }
 
     loadInitialData();
 
-  }, [pathname, fetchBranchData, fetchKitchenOrders, fetchMenuItems, fetchIngredients, fetchStaff]);
+  }, [fetchBranchData, fetchKitchenOrders, fetchMenuItems, fetchIngredients, fetchStaff, lastLoadedBranchId]);
 
 
 
-  const completeOrder = useCallback(async (id: string): Promise<boolean> => {
+  const completeOrder = useCallback(async (id: string, currentStatus: string): Promise<boolean> => {
     try {
+      // If already paid, marking as served completes it ('done').
+      // Otherwise, just mark as 'served'.
+      const newStatus = currentStatus === 'paid' ? 'done' : 'served';
+
       const res = await axiosInstance.patch(
         `/api/kitchen/status/${id}`,
-        { status: 'served' }
+        { status: newStatus }
       );
 
       if (res.status === 200 && res.data.order) {
-        // ... (logic remains same)
+        // Optimistically update or wait for refetch (refetch is safer for order movement)
         const updatedOrder = mapBackendOrderToFrontend(res.data.order);
         setKitchenOrders(prevOrders =>
           prevOrders.map(o => o.id === updatedOrder.id ? updatedOrder : o)
@@ -335,11 +382,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const markAsPaid = useCallback(async (id: string): Promise<boolean> => {
+  const markAsPaid = useCallback(async (id: string, currentStatus: string): Promise<boolean> => {
     try {
+      // If already served, marking as paid completes it ('done').
+      // Otherwise, just mark as 'paid'.
+      const newStatus = currentStatus === 'served' ? 'done' : 'paid';
+
       const res = await axiosInstance.patch(
         `/api/kitchen/status/${id}`,
-        { status: 'paid' }
+        { status: newStatus }
       );
 
       if (res.status === 200 && res.data.order) {

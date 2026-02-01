@@ -42,17 +42,22 @@ const FEATURE_FLAGS_KEY = 'featureFlags';
 
 import { useOrder } from '@/context/OrderContext';
 
-export function KitchenSidebar() {
+interface KitchenSidebarProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+export function KitchenSidebar({ collapsed, onToggleCollapse }: KitchenSidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const [visibleItems, setVisibleItems] = useState(mainNavItems);
   const [developerMode, setDeveloperMode] = useState(false);
   const { setIsPageLoading } = useOrder();
 
   const handleNavClick = (href: string) => {
-    if (pathname !== href) {
-      setIsPageLoading(true);
-    }
+    // We rely on the context to handle loading states on route change or data fetch
+    // if (pathname !== href) {
+    //   setIsPageLoading(true);
+    // }
   };
 
   useEffect(() => {
@@ -88,8 +93,9 @@ export function KitchenSidebar() {
 
   return (
     <motion.div
-      initial={{ width: 240 }}
+      initial={{ width: collapsed ? 80 : 240 }}
       animate={{ width: collapsed ? 80 : 240 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="hidden md:flex flex-col h-screen fixed left-0 top-0 z-40 bg-card border-r border-white/5 shadow-2xl"
     >
       <div className="h-20 flex items-center justify-between px-6 border-b border-white/5">
@@ -105,7 +111,7 @@ export function KitchenSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggleCollapse}
           className="ml-auto text-muted-foreground hover:text-primary transition-colors"
         >
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}

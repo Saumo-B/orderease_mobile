@@ -37,7 +37,7 @@ export default function KitchenPage() {
       onOrderCreated={handleOrderCreated}
     >
       <Card
-        className="h-[200px] flex items-center justify-center cursor-pointer group glass-card border-dashed border-2 border-white/20 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+        className="h-[260px] flex items-center justify-center cursor-pointer group glass-card border-dashed border-2 border-white/20 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
         onClick={() => setIsCreateDialogOpen(true)}
       >
         <CardContent className="flex flex-col items-center justify-center text-center p-6 gap-3">

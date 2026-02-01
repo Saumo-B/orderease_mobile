@@ -70,17 +70,17 @@ export default function BranchesPage() {
   }
 
   const addBranchCard = (
-    <Card
-      className="h-20 flex flex-col items-center justify-center cursor-pointer group bg-card/70 border-border border-2 border-dashed"
+    <div
       onClick={() => setIsAddBranchDialogOpen(true)}
+      className="group relative h-full min-h-[180px] rounded-3xl border-2 border-dashed border-white/10 bg-white/5 hover:bg-primary/5 hover:border-primary/50 transition-all duration-500 cursor-pointer flex flex-col items-center justify-center gap-3 overflow-hidden"
     >
-      <CardContent className="flex flex-col items-center justify-center text-center p-6">
-        <Plus className="h-8 w-8 text-foreground transition-colors" />
-        <p className="mt-2 text-sm font-semibold text-foreground transition-colors">
-          Add Branch
-        </p>
-      </CardContent>
-    </Card>
+      <div className="h-16 w-16 rounded-full bg-black/20 flex items-center justify-center group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-500">
+        <Plus className="h-8 w-8 text-foreground/50 group-hover:text-primary transition-colors" />
+      </div>
+      <p className="font-semibold text-foreground/60 group-hover:text-primary transition-colors">
+        Add New Outlet
+      </p>
+    </div>
   );
 
   return (
@@ -91,36 +91,40 @@ export default function BranchesPage() {
           <p className="text-lg">{error}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {addBranchCard}
+
           {branches.map((branch) => (
-            <Card
+            <div
               key={branch.id}
-              className="w-full group bg-card/70 border-border duration-300 cursor-pointer h-20 flex flex-col justify-center"
               onClick={() => handleEditClick(branch)}
+              className="group relative p-6 rounded-3xl bg-card/40 backdrop-blur-md border border-white/5 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 cursor-pointer flex flex-col gap-4 overflow-hidden"
             >
-              <CardContent className="p-4 text-sm flex justify-between items-center">
-                <div className="flex-grow">
-                  <p className="font-bold text-lg text-foreground transition-colors truncate">
-                    {branch.name}
-                  </p>
+              <div className="flex items-start justify-between">
+                <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center border border-primary/10 group-hover:scale-105 transition-transform duration-300">
+                  <Building className="h-6 w-6 text-primary" />
                 </div>
-                <div className="flex items-center text-muted-foreground ml-4 gap-4">
-                  <p className="flex items-center gap-2 truncate">
-                    <Home className="h-4 w-4" />
-                    {branch.address}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {branch.pin}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    {branch.phone}
-                  </p>
+                <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-muted-foreground group-hover:border-primary/30 group-hover:text-primary transition-colors">
+                  PIN: {branch.pin}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors mb-1">
+                  {branch.name}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {branch.address}
+                </p>
+              </div>
+
+              <div className="mt-auto pt-4 border-t border-white/5 flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary/60" />
+                  <span>{branch.phone}</span>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       )}
